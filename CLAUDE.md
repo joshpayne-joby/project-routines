@@ -104,6 +104,13 @@ Then continue with "What Changed Since Yesterday" and the rest of the sections a
 - One subsection per project, ordered by most recent session activity (most recent first)
 - Each subsection includes: project display name, task table filtered to this person (number, task, status, blocks), Hub link, last session date and who ran it
 - Use emoji status codes: :white_circle: (not started), :large_blue_circle: (in progress), :white_check_mark: (done), :red_circle: (blocked)
+
+**Task table trimming — keep it scannable:**
+- If a project has **3 or fewer** open tasks: show all of them.
+- If a project has **more than 3** open tasks: show only :large_blue_circle: (in progress) and :red_circle: (blocked) tasks. Below the table, add a summary line: "*Showing [N] active — [M] not started hidden*" where N is the count shown and M is the count of :white_circle: tasks omitted.
+- If a project has **zero** in-progress or blocked tasks but has not-started tasks, show the first 3 not-started tasks and add the summary line.
+- The goal is: the person sees what's moving and what's stuck first. Not-started tasks are available on the full project canvas — the daily briefing prioritizes action items.
+
 - Only show open tasks (not started, in progress, blocked). Done tasks are omitted from the daily view.
 
 **Project Registry:**

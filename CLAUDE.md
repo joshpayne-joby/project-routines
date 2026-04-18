@@ -50,7 +50,45 @@ The "My Tasks" canvas contains:
 
 Construct the updated "My Tasks" canvas content with these sections in order:
 
-**Header:** "My Tasks — [Collaborator Name]" with last updated timestamp
+**Scorecard (top of canvas, before everything else):**
+
+Build a visual scorecard using a Slack canvas layout. This is the first thing the person sees — it should answer "how does my world look right now?" in 5 seconds.
+
+The scorecard uses a 3-column layout at the top of the canvas:
+
+::: {.layout}
+::: {.column}
+### :clipboard: Projects
+**11** active
+**4** had sessions yesterday
+**2** quiet 5+ days
+:::
+::: {.column}
+### :large_blue_circle: Tasks
+**47** open
+**6** moved yesterday
+**8** blocked
+:::
+::: {.column}
+### :red_circle: Needs Attention
+**2** time-sensitive (see :red_circle: flags below)
+**3** blockers older than 2 days
+**1** waiting on you
+:::
+:::
+
+Rules for the scorecard:
+- **Projects column:** Count total active projects in the registry. Count projects with session log entries since yesterday. Count projects with no session log entry in 5+ days ("quiet").
+- **Tasks column:** Count total open tasks across all projects (not started + in progress + blocked). Count tasks that changed status since yesterday (moved = status changed in most recent session log). Count blocked tasks.
+- **Needs Attention column:** Count items flagged with :red_circle: callouts in the detail below (time-sensitive deadlines within 3 days, expiring quotes, overdue items). Count blockers that have been in the Blockers Log for more than 2 business days. Count "waiting on you" items (digest questions, approval requests).
+- All numbers are computed from the canvas data — never hardcoded.
+- If a count is zero, still show the line but with "0" — don't hide it. Zero is information.
+
+After the scorecard, add the last-updated timestamp:
+
+Last updated: [date/time]
+
+Then continue with "What Changed Since Yesterday" and the rest of the sections as already specified.
 
 **What Changed Since Yesterday:**
 - List new session log entries from any project (who worked, what changed)

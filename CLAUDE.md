@@ -156,6 +156,16 @@ If mirror is not configured, skip silently.
 
 ---
 
+## Connector Failure Handling
+
+- Never assume a connector that failed in a previous run is still unavailable. Each run attempts all connectors fresh.
+- If a connector is unavailable at run start, retry once before treating it as unavailable for this run.
+- If Slack is still unavailable after retry: continue the run using whatever connectors are working. Write the output file as normal. At the top of the output, note which steps were skipped and why (e.g., "Canvas write skipped — Slack unavailable after retry"). Do not halt the run.
+- If the canvas write fails but Slack is available, retry the write once. If it fails again, note the failure in the output file and continue.
+- A degraded run that produces partial output is always better than a halted run that produces nothing.
+
+---
+
 ## Rules
 
 - **Full replace only.** When writing to any Slack canvas, always use full replace without a section_id. Targeted section updates append duplicates.

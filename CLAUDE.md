@@ -1,7 +1,40 @@
 # Project Routines — CLAUDE.md
-# This file is read by every PLB Routine at the start of each run.
+# project-routines forks canvas-routines (joshpayne-joby/canvas-routines).
+# This file extends the base with PLB-aware behavior.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
+
+---
+
+## How This Extends canvas-routines
+
+canvas-routines defines the generic engine: read a Registry table from a person's canvas, fetch each source by type (Slack Canvas or Slack Channel), synthesize using their prompt file, write back with full replace, update `last_run_date`.
+
+This file keeps all of that and adds PLB-specific behavior on top:
+
+**Extended Registry reading (Phase 1):**
+- Each Registry row has a `claude_canvas_id` (Task Board) and a `hub_canvas_id` (Hub canvas), not just a flat source ID.
+- For each project: read the PLB Configuration block (`project_display_name`, `project_channel_id`, `last_session_date`), not just raw canvas content.
+- Read the **Session Log** — extract entries since the last Routine run date.
+- Read the **Blockers Log** — extract active blockers and their age.
+- Read task tables and filter to tasks assigned to this collaborator by matching section headers containing their Slack user ID.
+- For each Hub canvas: confirm collaborator is still on the Team table; read current phase from the Phase Tracker.
+
+**PLB-specific output (Phase 2):**
+- The scorecard is project-aware: counts active projects, session activity, blocked tasks, and blockers older than 2 business days — not just generic source counts.
+- Task table trimming: show in-progress and blocked tasks first; hide not-started tasks when count > 3 with a summary line.
+- "Waiting On You" section: surfaces digest questions ([Q-N]), task requests ([T-N]), and approval requests ([A-N]).
+
+**Auto-registration (Phase 3, PLB addition):**
+- Reads a PLB Registry canvas (if configured) to find projects the collaborator was added to since last run. Adds new rows to the Project Registry automatically.
+
+**Check-in notifications (Phase 5, PLB addition):**
+- After write-back, sends one consolidated DM to the PM for any projects with new session log entries. Silence if no activity.
+
+**Mirror (Phase 6, PLB addition):**
+- If `mirror_drive_folder_url` is configured, writes a timestamped snapshot of each active project's Claude Canvas to Drive after each run.
+
+Everything below is the full PLB behavior spec.
 
 ---
 

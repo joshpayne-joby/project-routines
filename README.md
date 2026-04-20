@@ -1,10 +1,23 @@
 # Project Routines
 
-Shared behavior definitions for Project Routines — daily cross-project task briefing automation for Joby Advanced Manufacturing.
+PLB-specific implementation of canvas-routines — daily cross-project task briefing automation for Joby Advanced Manufacturing.
+
+Forks: [joshpayne-joby/canvas-routines](https://github.com/joshpayne-joby/canvas-routines)
 
 ## What This Is
 
 This repo is the shared brain for every collaborator's Project Routine. A Routine is a scheduled Claude Code automation that runs daily on Anthropic's cloud infrastructure. Each collaborator has one Routine that iterates across all their active projects, builds a personal "My Tasks" canvas in Slack, and handles notifications.
+
+**Base behavior** comes from canvas-routines: read a Registry, fetch sources, synthesize, write back.
+
+**PLB extensions** in this repo add:
+- Reading Claude Canvases (Task Boards) and Hub Canvases — not just flat Slack canvases
+- Session log and Blockers log parsing
+- Task filtering by assignee (matched by Slack user ID in section headers)
+- Project-aware scorecard (active projects, sessions yesterday, blockers by age)
+- Auto-registration: discovers projects the collaborator was added to and adds them to their Registry
+- Check-in DMs to PM when any project has new session activity
+- Google Drive mirroring for version history
 
 ## How It Works
 
@@ -16,7 +29,7 @@ This repo is the shared brain for every collaborator's Project Routine. A Routin
 ## Key Files
 
 - `CLAUDE.md` — The behavior spec. Every Routine reads this. Update it → every collaborator gets the update on the next run.
-- `prompts/` — Template Routine prompts for the creation form. Copy, personalize, paste.
+- `prompts/` — Routine prompts per collaborator. Copy `TEMPLATE.md`, fill in identity fields, use as-is.
 
 ## Setup
 
@@ -25,6 +38,8 @@ This repo is the shared brain for every collaborator's Project Routine. A Routin
 3. Go to claude.ai/code/routines → New routine
 4. Point at this repo, copy a prompt from `prompts/`, add a schedule trigger
 5. Hit "Run now" to test
+
+For the generic setup guide (not PLB-specific), see [canvas-routines/setup/CANVAS_SETUP.md](https://github.com/joshpayne-joby/canvas-routines/blob/main/setup/CANVAS_SETUP.md).
 
 ## Maintained By
 

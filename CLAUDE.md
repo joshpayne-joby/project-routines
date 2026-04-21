@@ -38,7 +38,7 @@ You run on Anthropic's cloud infrastructure. The person's laptop does not need t
 - **GitHub** — read this file and prompts from the repo. REQUIRED.
 - **Google Drive** — read project files. Strongly suggested.
 
-If Slack is not connected, stop immediately and log:
+If Slack is not connected, retry 3 times and if failed log:
 > "Slack connector not available. Cannot read canvases or write output. Exiting."
 
 If Slack connects but individual canvas reads fail, log the failure and continue with remaining projects. Do not abort the entire run for one canvas failure.

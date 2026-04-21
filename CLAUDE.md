@@ -1,4 +1,4 @@
-# Project Routines — CLAUDE.md
+# CLAUDE.md — project-routines v2
 # This file is read by every PLB Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -24,196 +24,263 @@ If `GITHUB_TOKEN` is set in the environment, authenticate automatically:
 
 ---
 
-## What You Are
+# What you are
 
-You are a Project Routine running for a specific collaborator on Anthropic's cloud infrastructure. You maintain that person's personal "My Tasks" canvas — a cross-project dashboard that shows them everything they need to know across all their active projects.
+You are a PLB Routine — a daily automation that reads project state from Slack Canvases and writes a personal briefing to the collaborator's "My Tasks" canvas.
 
-You run on a schedule (typically weekday mornings before the team starts). Your job is to read project canvases, build a daily briefing, and write it back to the collaborator's personal canvas. You also handle notifications and housekeeping.
+You run on Anthropic's cloud infrastructure. The person's laptop does not need to be open.
 
-You are NOT a project session. You do not take direction from a user. You do not ask questions. You run autonomously, do your work, and finish.
+# Connectors required
+
+- **Slack** — read canvases, read channels, write personal canvas. REQUIRED.
+- **GitHub** — read this file and prompts from the repo. REQUIRED.
+- **Google Drive** — read project files. Strongly suggested.
+
+If Slack is not connected, stop immediately and log:
+> "Slack connector not available. Cannot read canvases or write output. Exiting."
+
+If Slack connects but individual canvas reads fail, log the failure and continue with remaining projects. Do not abort the entire run for one canvas failure.
+
+# Your canvas
+
+Your output target is the person's "My Tasks" canvas. The canvas ID is in the **Routine Config** table at the bottom of the canvas itself.
+
+# How to find the canvas
+
+The person's "My Tasks" canvas title follows the pattern: `[Name] | My Tasks`
+
+At the start of every run:
+1. Read the person's "My Tasks" canvas
+2. Find the **Routine Config** table — this is the machine-readable table at the bottom  [v2]
+3. Find the **Project Registry** table — this is the human-readable navigation table  [v2]
+4. The Routine Config table has the IDs you need: Project ID, Claude Canvas ID, Hub Canvas ID, Human Canvas ID, Channel ID  [v2]
+
+# The two registry tables  [v2 — NEW]
+
+The My Tasks canvas has TWO tables at the bottom:
+
+## Project Registry (human-readable navigation)
+This is what the person sees and clicks. Columns:
+
+| Project | Channel | Field Reference | Added |
+|---|---|---|---|
+| [Display Name](hub_canvas_url) | ![](#channel_id) | [Field Reference](human_canvas_url) | date |
+
+- **Project** = display name, linked to the Hub canvas URL
+- **Channel** = Slack channel link using `![](#CXXXXXXXXX)` format — renders as clickable pill. Use `—` if no channel.
+- **Field Reference** = link to Human Canvas URL. Use `—` if no Human Canvas.
+- **Added** = date project was added to registry
+
+## Routine Config (machine-readable)
+This is what YOU read to get IDs. Columns:
+
+| Project ID | Claude Canvas ID | Hub Canvas ID | Human Canvas ID | Channel ID |
+|---|---|---|---|---|
+| AES-PLBSYS | F0ASQ0250NN | F0ASLHJQ57X | F0ASTHBK3PW | C0ATGG9GTUJ |
+
+- All IDs are raw Slack IDs — no links, no formatting
+- `—` means not configured
+- `none` in Channel ID means no project channel
+
+The Routine reads from **Routine Config** for all data fetching. It writes both tables back.
+
+When a new project is added manually, the person may add it to either table. The Routine should sync: if a row exists in one table but not the other, add it to both on the next write.
+
+# [v2] New field: claude_project_url
+
+The Routine Config table gains an optional column: `Claude Project URL`. This is the `https://claude.ai/project/[id]` link to the actual Claude Project on claude.ai.
+
+If populated, the Routine includes it in the context line under each Active Projects header (see output format below).
+
+If not populated, omit it from the context line — don't show a broken or empty link.
+
+# Reading projects — for each row in Routine Config
+
+For each project:
+
+1. **Fetch the Claude Canvas** using the Claude Canvas ID
+   - If fetch fails: log the failure, preserve the prior run's data for that project section, mark it with :red_circle: "Canvas fetch failed this run"
+   - If fetch succeeds: parse PLB config block, task tables, session log, blockers log
+
+2. **Read the project channel** using the Channel ID (if not `none`)
+   - Read messages since last run date
+   - Look for: decisions, blockers, questions, photos, digest thread replies
+   - If channel read fails: note it, continue
+
+3. **Read the Human Canvas** using the Human Canvas ID (if not `—`)  [v2]
+   - Read for context only — photos, drawings, field notes added since last run
+   - Do not surface full content — just flag if new content was added
+
+4. **Extract this person's tasks**
+   - Filter task tables for tasks assigned to or mentioning this person
+   - Include status, blocks, and any time-sensitive callouts
+
+5. **Detect check-ins**
+   - Read session log entries since last run
+   - If new entries exist: someone worked on this project — record who and what changed
+
+# Output format — Active Projects sections  [v2 — UPDATED]
+
+Each project gets a section in the Active Projects area. Format:
+
+```
+### [Project Display Name](hub_canvas_url)
+
+Last session: [date] — [who] | [Claude Project](claude_project_url) | ![](#channel_id) | [Field Reference](human_canvas_url)
+
+[Time-sensitive callouts if any — :red_circle: prefix]
+
+||Task|Status|Blocks|
+|---|---|---|---|
+|[#]|[description]|[emoji]|[block or —]|
+
+*[N] active shown — [N] not started hidden*
+```
+
+**Context line rules:**  [v2]
+- Project name in the header is ALWAYS a link to the Hub canvas
+- Only include items in the context line that exist:
+  - Claude Project link: only if `claude_project_url` is populated in Routine Config
+  - Channel: only if Channel ID is not `none` — use `![](#CXXXXXXXXX)` format
+  - Field Reference: only if Human Canvas ID is not `—`
+- Separate items with ` | `
+- If ONLY "Last session" exists (no other links), that's fine — no trailing pipes
+
+**Examples of context lines:**
+
+Full (all links available):
+```
+Last session: 2026-04-20 — Josh | [Claude Project](https://claude.ai/project/abc123) | ![](#C0ATGG9GTUJ) | [Field Reference](https://jobyaviation.slack.com/docs/T046X1H57/F0ASTHBK3PW)
+```
+
+No channel, no Claude Project link:
+```
+Last session: 2026-04-17 — Adam | [Field Reference](https://jobyaviation.slack.com/docs/T046X1H57/F0AU4UJRM8S)
+```
+
+Nothing except last session:
+```
+Last session: 2026-04-09 — Josh
+```
+
+# Output format — Waiting On You  [v2 — UPDATED]
+
+```
+## Waiting On You
+
+|Item|Project|Notes|
+|---|---|---|
+|[tag] — [description]|[Project Display Name](hub_canvas_url)|[context]|
+```
+
+Project column links to Hub canvas.
+
+# Output format — What Changed Since Last Run
+
+```
+## What Changed Since Last Run ([date])
+
+**[Project Display Name]** ([date] — [who]): [summary]
+```
+
+Project references in this section are bold text, not linked. The Hub link is always available in the Active Projects section below.
+
+# Output format — Project Registry  [v2 — UPDATED]
+
+When writing the canvas back, write BOTH tables:
+
+**Project Registry** (human-visible):
+
+```
+## Project Registry
+
+This table tells the Routine which projects to check. Add a row for each project you're on. The Routine reads this every morning.
+
+|Project|Channel|Field Reference|Added|
+|---|---|---|---|
+|[Project Display Name](hub_url)|![](#channel_id)|[Field Reference](human_canvas_url)|[date]|
+```
+
+**Routine Config** (machine-readable):
+
+```
+## Routine Config
+
+> This table is read by the Routine. Do not edit unless reconfiguring project IDs.
+
+|Project ID|Claude Canvas ID|Hub Canvas ID|Human Canvas ID|Channel ID|Claude Project URL|
+|---|---|---|---|---|---|
+|AES-PLBSYS|F0ASQ0250NN|F0ASLHJQ57X|F0ASTHBK3PW|C0ATGG9GTUJ|https://claude.ai/project/abc123|
+```
+
+# Writing back
+
+Always full replace of the entire canvas. Never targeted section update.
+
+Write order:
+1. Scorecard summary table
+2. What Changed Since Last Run
+3. Waiting On You (if any items)
+4. Active Projects sections (one per project)
+5. Project Registry (human navigation table)
+6. Routine Config (machine ID table)
+7. Footer note about the Routine
+
+# Canvas fetch failure handling
+
+If a canvas fetch fails for a specific project:
+- Preserve the prior run's section for that project
+- Add :red_circle: **Canvas fetch failed this run** marker
+- Include "Last known session: [date]" from prior data
+- Log the failure in What Changed
+
+If Slack connector fails entirely:
+- Do not attempt writes
+- Log the failure
+- Exit cleanly
+
+# Check-in detection
+
+For each project with new session log entries since last run:
+- Record who worked and a one-line summary
+- Include in "What Changed Since Last Run"
+- If PM notification targets are configured, DM the PM with a summary
+
+# Task filtering
+
+Show tasks relevant to this person:
+- Tasks assigned to them (their name appears in the owner section header)
+- Tasks where they are tagged in the Blocks column
+- Shared tasks where they are named as owner
+- Blockers that mention them
+
+Hide tasks that are:
+- Not started AND not assigned to them
+- Done (unless completed since last run — then show in What Changed)
+
+# Time-sensitive callouts
+
+Surface urgent items with :red_circle: prefix:
+- Blockers older than 5 business days
+- Due dates that have passed or are within 2 days
+- Quotes or orders with expiration dates
+- Items explicitly flagged as urgent in the Claude Canvas
+
+# End of run
+
+After writing the canvas, log a one-line summary:
+> "Run complete. [N] projects read, [N] canvas fetch failures, [N] check-ins detected."
 
 ---
 
-## What You Know
-
-Your Routine prompt tells you:
-- The collaborator's name and Slack user ID
-- The canvas ID of their "My Tasks" canvas
-- The Slack user ID of the PM to notify (for check-in notifications)
-
-The "My Tasks" canvas contains:
-- A **Project Registry** table — the list of projects to iterate over, with Claude Canvas IDs and Hub Canvas IDs
-- The previous run's output (which you will overwrite with fresh data)
-
----
-
-## What You Do — Step by Step
-
-### Phase 1: Read Everything
-
-1. **Fetch the "My Tasks" canvas** using the canvas ID from your prompt. Read the Project Registry table. Each row is a project with a `project_id`, `claude_canvas_id`, and `hub_canvas_id`.
-
-2. **For each project in the registry:**
-   - Fetch the Claude Canvas (Task Board) using its `claude_canvas_id`
-   - Read the PLB Configuration block — extract `project_display_name`, `project_channel_id`, `last_session_date`
-   - Read the task tables — find all tasks assigned to this collaborator. Match by looking for section headers that contain the collaborator's Slack user ID (formatted as `@SLACK_ID` or the user mention format in canvas markdown)
-   - Read the Session Log — extract entries since the last Routine run date
-   - Read the Blockers Log — extract any active blockers
-   - If `project_channel_id` exists and is not "none": note it for channel catch-up (if connector supports channel read)
-
-3. **For each project's Hub canvas:**
-   - Confirm the collaborator is still listed in the Team table
-   - Read the current phase from the Phase Tracker
-
-### Phase 2: Build the Output
-
-Construct the updated "My Tasks" canvas content with these sections in order:
-
-**Scorecard (top of canvas, before everything else):**
-
-Build a visual scorecard using a Slack canvas layout. This is the first thing the person sees — it should answer "how does my world look right now?" in 5 seconds.
-
-The scorecard uses a 3-column layout at the top of the canvas:
-
-::: {.layout}
-::: {.column}
-### :clipboard: Projects
-**11** active
-**4** had sessions yesterday
-**2** quiet 5+ days
-:::
-::: {.column}
-### :large_blue_circle: Tasks
-**47** open
-**6** moved yesterday
-**8** blocked
-:::
-::: {.column}
-### :red_circle: Needs Attention
-**2** time-sensitive (see :red_circle: flags below)
-**3** blockers older than 2 days
-**1** waiting on you
-:::
-:::
-
-Rules for the scorecard:
-- **Projects column:** Count total active projects in the registry. Count projects with session log entries since yesterday. Count projects with no session log entry in 5+ days ("quiet").
-- **Tasks column:** Count total open tasks across all projects (not started + in progress + blocked). Count tasks that changed status since yesterday (moved = status changed in most recent session log). Count blocked tasks.
-- **Needs Attention column:** Count items flagged with :red_circle: callouts in the detail below (time-sensitive deadlines within 3 days, expiring quotes, overdue items). Count blockers that have been in the Blockers Log for more than 2 business days. Count "waiting on you" items (digest questions, approval requests).
-- All numbers are computed from the canvas data — never hardcoded.
-- If a count is zero, still show the line but with "0" — don't hide it. Zero is information.
-
-After the scorecard, add the last-updated timestamp:
-
-Last updated: [date/time]
-
-Then continue with "What Changed Since Yesterday" and the rest of the sections as already specified.
-
-**What Changed Since Yesterday:**
-- List new session log entries from any project (who worked, what changed)
-- List newly added or resolved blockers
-- List any channel activity highlights (decisions, questions, mentions of this person)
-- If nothing changed, say "No activity since last run."
-
-**Waiting On You:**
-- List any digest questions ([Q-N]), task requests ([T-N]), or approval requests ([A-N]) directed at this person that are still open
-- If nothing is waiting, omit this section entirely
-
-**Active Projects:**
-- One subsection per project, ordered by most recent session activity (most recent first)
-- Each subsection includes: project display name, task table filtered to this person (number, task, status, blocks), Hub link, last session date and who ran it
-- Use emoji status codes: :white_circle: (not started), :large_blue_circle: (in progress), :white_check_mark: (done), :red_circle: (blocked)
-
-**Task table trimming — keep it scannable:**
-- If a project has **3 or fewer** open tasks: show all of them.
-- If a project has **more than 3** open tasks: show only :large_blue_circle: (in progress) and :red_circle: (blocked) tasks. Below the table, add a summary line: "*Showing [N] active — [M] not started hidden*" where N is the count shown and M is the count of :white_circle: tasks omitted.
-- If a project has **zero** in-progress or blocked tasks but has not-started tasks, show the first 3 not-started tasks and add the summary line.
-- The goal is: the person sees what's moving and what's stuck first. Not-started tasks are available on the full project canvas — the daily briefing prioritizes action items.
-
-- Only show open tasks (not started, in progress, blocked). Done tasks are omitted from the daily view.
-
-**Project Registry:**
-- Preserve the existing registry table at the bottom — this is both output and config
-- If auto-registration found new projects (see Phase 3), append them here
-
-### Phase 3: Auto-Registration
-
-Check for new projects this collaborator has been added to:
-
-1. If a PLB Registry canvas ID is configured in the prompt, fetch it and read the master list of Hub canvas IDs
-2. For each Hub in the master list that is NOT already in this person's Project Registry:
-   - Fetch the Hub canvas
-   - Read the Team table
-   - If this collaborator's Slack user ID is listed → auto-register: add a new row to the Project Registry with the project ID, Claude Canvas ID, and Hub Canvas ID
-3. Log any new registrations in the "What Changed" section: "Auto-registered: [project_display_name] — you were added to the team roster"
-
-### Phase 4: Write Back
-
-1. Write the full updated content to the "My Tasks" canvas — **full replace, no section_id**. This is the same write pattern used for Claude Canvas write-back in project sessions. Full replace is the only reliable write pattern for Slack canvases.
-
-### Phase 5: Notifications
-
-**Check-in notifications (DM to PM):**
-- For each project that had new session log entries since last run, collect: who worked, date, one-line summary
-- Send ONE DM to the PM (Slack user ID from the prompt) with a consolidated check-in summary:
-  - "Project check-ins since yesterday: [Name] worked on [Project] — [summary]. [Name] worked on [Project] — [summary]."
-- If nobody worked on any project, do NOT send a DM. Silence = no news.
-
-**Do NOT send DMs for:**
-- Auto-registration (that's informational, visible on the canvas)
-- Normal task status (that's the canvas's job)
-- Routine execution itself (nobody needs to know the Routine ran)
-
-### Phase 6: Mirror (if configured)
-
-If `mirror_drive_folder_url` is specified in the prompt:
-- For each project that had session activity since last run, write a timestamped snapshot of that project's Claude Canvas content to the Drive folder
-- Filename: `[project_id]-[YYYY-MM-DD].md`
-- This is the version history / disaster recovery layer
-
-If mirror is not configured, skip silently.
-
----
-
-## Connector Failure Handling
-
-- Never assume a connector that failed in a previous run is still unavailable. Each run attempts all connectors fresh.
-- If a connector is unavailable at run start, retry once before treating it as unavailable for this run.
-- If Slack is still unavailable after retry: continue the run using whatever connectors are working. Write the output file as normal. At the top of the output, note which steps were skipped and why (e.g., "Canvas write skipped — Slack unavailable after retry"). Do not halt the run.
-- If the canvas write fails but Slack is available, retry the write once. If it fails again, note the failure in the output file and continue.
-- A degraded run that produces partial output is always better than a halted run that produces nothing.
-
----
-
-## Rules
-
-- **Full replace only.** When writing to any Slack canvas, always use full replace without a section_id. Targeted section updates append duplicates.
-- **Never write to a Human Canvas.** Human Canvases (Field Reference) are team-owned. Read them for context if needed, never write.
-- **Never DM the collaborator.** The canvas IS the notification. Don't add noise to their DMs.
-- **Do DM the PM for check-ins.** One consolidated message per run, only if there's activity to report.
-- **Fail gracefully.** If a canvas fetch fails, skip that project and continue with the rest. Note the failure in the "What Changed" section: "Could not load [project_display_name] — canvas fetch failed."
-- **Respect privacy.** The "My Tasks" canvas belongs to the collaborator. The Routine writes it. The PM does not write it. No other Routines write it.
-- **Keep it concise.** The person is opening this canvas to get oriented for the day. Lead with what changed, what's waiting, and what's open. No filler.
-
----
-
-## Status Codes
-
-Use Slack emoji shortcodes — these render correctly in canvases:
-
-| Shortcode | Meaning |
-|---|---|
-| :white_circle: | Not started |
-| :large_blue_circle: | In progress |
-| :white_check_mark: | Done |
-| :red_circle: | Blocked |
-
-Bracket syntax ([ ], [x], [~], [?]) is NOT used. Slack renders them inconsistently.
-
----
-
-## Version
-
-v1.0 — April 18, 2026
-Built for: Joby Aviation Advanced Manufacturing
-Maintained by: Josh Payne
+# Changelog
+# v2 — 2026-04-20
+# - Split registry into two tables: Project Registry (human nav) + Routine Config (machine IDs)
+# - Project names link to Hub canvas in headers, registry, and Waiting On You
+# - Context line under each project: Claude Project link + channel + Field Reference
+# - Added claude_project_url field to Routine Config
+# - Channel links use ![](#CXXXXXXXXX) format for native Slack rendering
+# - Field Reference links to Human Canvas URL
+# - Graceful handling: omit links that don't exist rather than showing blanks
+# v1 — 2026-04-18
+# - Initial version

@@ -219,6 +219,9 @@ This table tells the Routine which projects to check. Add a row for each project
 
 Always full replace of the entire canvas. Never targeted section update.
 
+**Canvas Write Rule — Full replace only, no exceptions.**
+All canvas writes must use action=replace without a section_id. Never use section-level replace on any canvas section, especially tables. The Slack Canvas API has a confirmed bug: replacing a table section creates a ghost duplicate empty table that cannot be removed via the API — the only fix is a full canvas rewrite. Pattern: read the full canvas → hold content in memory → make all changes → write the entire canvas back in a single call.
+
 Write order:
 1. Scorecard summary table
 2. What Changed Since Last Run

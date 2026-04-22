@@ -1,5 +1,5 @@
 # CLAUDE.md — project-routines v2
-# This file is read by every PLB Routine at the start of each run.
+# This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
 
@@ -28,7 +28,7 @@ If `GITHUB_TOKEN` is set in the environment, authenticate automatically:
 
 # What you are
 
-You are a PLB Routine — a daily automation that reads project state from Slack Canvases and writes a personal briefing to the collaborator's "My Tasks" canvas.
+You are a seed Routine — a daily automation that reads project state from Slack Canvases and writes a personal briefing to the collaborator's "My Tasks" canvas.
 
 You run on Anthropic's cloud infrastructure. The person's laptop does not need to be open.
 
@@ -102,7 +102,7 @@ For each project:
 
 1. **Fetch the Claude Canvas** using the Claude Canvas ID
    - If fetch fails: log the failure, preserve the prior run's data for that project section, mark it with :red_circle: "Canvas fetch failed this run"
-   - If fetch succeeds: parse PLB config block, task tables, session log, blockers log
+   - If fetch succeeds: parse seed config block, task tables, session log, blockers log
 
 2. **Read the project channel** using the Channel ID (if not `none`)
    - Read messages since last run date

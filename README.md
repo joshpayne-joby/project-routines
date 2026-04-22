@@ -16,9 +16,18 @@ This repo is the shared brain for every collaborator's Project Routine. A Routin
 ## Key Files
 
 - `CLAUDE.md` — The behavior spec. Every Routine reads this. Update it → every collaborator gets the update on the next run.
+- `COLLABORATOR_SETUP.md` — Provisioner for new-collaborator onboarding. Drop into a Claude Project as Instructions to spin up a Routine + My Tasks canvas in one conversation.
 - `prompts/` — Template Routine prompts for the creation form. Copy, personalize, paste.
 
 ## Setup
+
+**Guided path (recommended):**
+
+1. Create a new Claude Project
+2. Paste `COLLABORATOR_SETUP.md` as the Project Instructions
+3. Open a chat and answer three questions — the provisioner creates your "My Tasks" canvas, generates your Routine prompt, and hands you the copy-paste block for claude.ai/code/routines
+
+**Manual path:**
 
 1. Get access to this repo (Joby SSO)
 2. Create your "My Tasks" canvas in Slack (your PM or a Project session can do this)

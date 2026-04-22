@@ -1,7 +1,15 @@
 # COLLABORATOR_SETUP.md
 # Project Routine Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 0.2 | April 2026 | Josh Payne
+# Version 0.3 | April 2026 | Josh Payne
+
+---
+
+## Configuration
+
+- seed Registry canvas ID: `F0AUJ8FV6JH`
+- Slack tenant URL base: `https://jobyaviation.enterprise.slack.com`
+- Routines repo: `joshpayne-joby/project-routines` (branch `main`)
 
 ---
 
@@ -47,7 +55,7 @@ If there are multiple matches, list them with titles/emails and confirm. Never g
 
 **From question 3** — each answer should map to an existing project. For each:
 
-- If they give a Project ID (AES-PLBSYS, TFAB-IRIS, etc.) — look it up in the shared seed Registry if one exists, or ask for the Hub canvas link
+- If they give a Project ID (AES-PLBSYS, TFAB-IRIS, etc.) — look it up in the seed Registry (canvas `F0AUJ8FV6JH`) to get the Hub URL, then follow the Hub-link bullet below. If not in Registry, ask for the Hub link.
 - If they give a project name — ask for the Hub canvas link
 - If they give a Hub link — fetch the canvas, read the Canvas Registry section, pull out the five IDs (Project ID, Claude Canvas, Hub, Human Canvas, Channel)
 
@@ -119,7 +127,7 @@ The collaborator does not need to touch the repo. Josh commits the prompt to `jo
 4. Set schedule: **Weekdays 6:30 AM PT** (or whatever cadence fits your day)
 5. Hit **Run now** to smoke-test. Your My Tasks canvas should populate within a minute.
 
-Your canvas: https://jobyaviation.slack.com/docs/T046X1H57/[my_tasks_canvas_id]
+Your canvas: https://jobyaviation.enterprise.slack.com/docs/T046X1H57/[my_tasks_canvas_id]
 
 Need to add a project later? Add a row to the Project Registry table in your canvas. The Routine picks it up on the next run."
 

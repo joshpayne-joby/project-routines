@@ -17,6 +17,7 @@ This repo is the shared brain for every collaborator's Project Routine. A Routin
 
 - `CLAUDE.md` — The behavior spec. Every Routine reads this. Update it → every collaborator gets the update on the next run.
 - `COLLABORATOR_SETUP.md` — Provisioner for new-collaborator onboarding. Drop into a Claude Project as Instructions to spin up a Routine + My Tasks canvas in one conversation.
+- `PRIME_PROJECT_CANVAS.md` — Source-of-truth copy of the PLB Prime Project Canvas content. The live canvas in Slack (F0AU9KARVQ8) is what every active Claude Project session reads; this file is the versioned mirror so changes have durable history.
 - `prompts/` — Template Routine prompts for the creation form. Copy, personalize, paste.
 
 ## Setup

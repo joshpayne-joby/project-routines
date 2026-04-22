@@ -252,7 +252,7 @@ Reply in this thread — your answers get picked up next session.
 
 ## Reference — Where to Look for More
 
-* **Setup a new seed project:** `PLB_SETUP.md` (provisioner — one-shot, not loaded during sessions)
+* **Setup a new seed project:** `PROJECT_SETUP.md` (provisioner — one-shot, not loaded during sessions)
 * **Hierarchy decoder:** ISA-95 guide (on demand)
 * **Prompting skills:** Skills reference (on demand)
 * **Mirror setup:** `MIRROR_PATHS.md`

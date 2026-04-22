@@ -1,7 +1,7 @@
 # COLLABORATOR_SETUP.md
 # Project Routine Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 0.3 | April 2026 | Josh Payne
+# Version 0.4 | April 2026 | Josh Payne
 
 ---
 
@@ -57,7 +57,18 @@ If there are multiple matches, list them with titles/emails and confirm. Never g
 
 - If they give a Project ID (AES-PLBSYS, TFAB-IRIS, etc.) — look it up in the seed Registry (canvas `F0AUJ8FV6JH`) to get the Hub URL, then follow the Hub-link bullet below. If not in Registry, ask for the Hub link.
 - If they give a project name — ask for the Hub canvas link
-- If they give a Hub link — fetch the canvas, read the Canvas Registry section, pull out the five IDs (Project ID, Claude Canvas, Hub, Human Canvas, Channel)
+- If they give a Hub link — fetch the canvas and read the `## Canvas Registry` section. The section is a key-value list with backtick-wrapped IDs, e.g.:
+
+  ```
+  - **Project ID:** `AES-WINGFLIP`
+  - **Display Name:** Wing-flip gantry
+  - **Claude Canvas:** `F0ARXHUEA74` — [Open](...)
+  - **Human Canvas:** `F0AUJH9UT8R` — [Open](...)
+  - **Channel:** `C0ATZAHBLHZ` — ![](#C0ATZAHBLHZ)
+  - **Claude Project:** —
+  ```
+
+  Harvest: `Project ID`, `Display Name`, `Claude Canvas ID`, `Human Canvas ID`, `Channel ID`, `Claude Project URL`. The Hub's own canvas ID is the Hub URL/ID you were given. If the Hub has no `## Canvas Registry` section, tell the PM the Hub needs to be retrofitted before their project can be pre-registered — give them a single Project ID and Hub URL pair, and keep going.
 
 Build the list in memory. One exchange, two at most. Don't block setup on this — skip gracefully if they say "none yet" or "just me so far."
 
@@ -66,6 +77,8 @@ Build the list in memory. One exchange, two at most. Don't block setup on this �
 ## Create the My Tasks Canvas
 
 Create one canvas titled exactly: **[Name] | My Tasks**
+
+Pass the title via the `title` parameter of `slack_create_canvas`. Do NOT put a `# [Name] | My Tasks` H1 in the body — Slack stores the title slot and body H1 independently and will render both, causing a visible duplicate.
 
 Use `slack_create_canvas` with the My Tasks template below, pre-filled with:
 - Collaborator name in the intro
@@ -139,9 +152,9 @@ Done. Their Routine is live after step 5.
 
 ### MY TASKS CANVAS TEMPLATE
 
-```
-# [Name] | My Tasks
+This is the canvas BODY only. The title `[Name] | My Tasks` goes in the `title` parameter of `slack_create_canvas` — not in the body.
 
+```
 Daily briefing written by the Project Routine. Updated every weekday morning.
 
 ## What Changed Since Last Run

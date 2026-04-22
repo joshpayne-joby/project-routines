@@ -1,7 +1,7 @@
 # COLLABORATOR_SETUP.md
 # Project Routine Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 0.1 | April 2026 | Josh Payne
+# Version 0.2 | April 2026 | Josh Payne
 
 ---
 
@@ -93,8 +93,7 @@ You are [Name]'s Project Routine. Read the CLAUDE.md in this repository for the 
 
 ## Configuration
 
-- Mirror: not configured
-- seed Registry canvas ID: not configured
+- seed Registry canvas ID: F0AUJ8FV6JH
 
 ## Instructions
 

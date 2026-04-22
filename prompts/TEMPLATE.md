@@ -14,8 +14,7 @@ You are [Name]'s Project Routine. Read the CLAUDE.md in this repository for the 
 
 ## Configuration
 
-- Mirror: not configured
-- seed Registry canvas ID: not configured
+- seed Registry canvas ID: F0AUJ8FV6JH
 
 ## Instructions
 

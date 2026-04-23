@@ -12,30 +12,33 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
   - [ ] `contracts/seed-registry.md` — canvas `F0AUJ8FV6JH`, three-column table schema, who writes/reads
   - [ ] `contracts/hub-canvas-registry.md` — KV bullet section every Hub emits
   - [ ] `contracts/my-tasks-routine-config.md` — machine-readable table schema
-  - [ ] `contracts/claude-canvas-config.md` — the fenced PLB/seed Configuration block schema
+  - [ ] `contracts/claude-canvas-config.md` — the fenced seed Configuration block schema
   - [ ] `contracts/prime-project-canvas.md` — pointer to `F0AU9KARVQ8` as behavior contract
-- [ ] `CONTROL_TOWER.md` — versioned mirror of Control Tower Instructions canvas `F0AUGD2CC9J`
+- [x] `CONTROL_TOWER.md` — versioned mirror of Control Tower Instructions canvas `F0AUGD2CC9J` — **landed 2026-04-23 at `mirrors/CONTROL_TOWER.md` (v1.3).**
 
 ## Repo visibility and access
 
-- [ ] Flip repo visibility from public → private (pre-launch content shouldn't be public)
-- [ ] Decide: keep on personal account (`joshpayne-joby`) with manual collaborator adds, or transfer to Joby org for auto org-member access (requires org admin + IT — related to B3)
-- [ ] If staying on personal: add each collaborator's GitHub account so their Routine can read CLAUDE.md
+- [x] **Resolved 2026-04-23 via two-repo split:**
+  - **Canonical:** `joby/project-routines` (private, org-gated). All substantive work lives here.
+  - **Public mirror:** `joshpayne-joby/project-routines` (public, orphan history, machine-readable files only). Needed because Claude Code Routines can't SSO into org-private repos — mirror is the runtime read surface for `CLAUDE.md`.
+  - Force-pushed fresh orphan to public mirror; force-pushed local fat history to joby canonical. Local tracks `joby/main`.
+- [ ] Per-collaborator access to the public mirror is open-read — no add step. Private repo collaboration still pending GitHub App org install (B3).
 
 ## Phase 1 — Repo consolidation
 
 - [x] Decide `seed/` subfolder layout vs. flat top-level — **locked 2026-04-23: function-grouped.** Root holds README, CLAUDE.md, COLLABORATOR_SETUP.md, PROJECT_SETUP.md (audience-direct). Folders: `contracts/`, `mirrors/`, `docs/`, `prompts/`, `notes/`.
-- [ ] Delete stale `~/Claude/seed/COLLABORATOR_SETUP.md` (v0.1 — repo has v0.4)
-- [ ] Delete stale `~/Claude/seed/PRIME_PROJECT_CANVAS.md` (older than repo copy)
-- [ ] PLB → seed rebrand pass across all files
-  - [ ] Resolve `## PLB Configuration` vs. `seed config block` naming mismatch (CLAUDE.md vs. PROJECT_SETUP template)
-  - [ ] Rename `plb_mirror_*` fields in the config block schema
-- [ ] Move `~/Claude/seed/PROJECT_SETUP.md` (v1.6) into repo
-- [ ] Decision: move `~/Claude/seed/MIRROR_PATHS.md` into repo marked retired, or omit
-- [ ] Decision: move `~/Claude/seed/PROJECT_INSTRUCTIONS_WRAPPER.md` into repo or omit
-- [ ] Promote `README.draft.md` → `README.md` (after contracts/ and CONTROL_TOWER.md land)
+- [x] Delete stale `~/Claude/seed/COLLABORATOR_SETUP.md` (v0.1 — repo has v0.4)
+- [x] Delete stale `~/Claude/seed/PRIME_PROJECT_CANVAS.md` (older than repo copy)
+- [x] Delete stale `~/Claude/seed/{PROJECT_SETUP,MIRROR_PATHS,PROJECT_INSTRUCTIONS_WRAPPER}.md` — all superseded by repo versions. Backup at `/tmp/seed-stale-backup-20260423.tar.gz`.
+- [x] PLB → seed rebrand pass across all files
+  - [x] `## PLB Configuration` → `## seed Configuration` (PROJECT_SETUP.md v1.7)
+  - [x] Rename `plb_mirror_*` → `seed_mirror_*` (PRIME_PROJECT_CANVAS.md, PROJECT_SETUP.md, MIRROR_PATHS.md)
+- [x] Move `~/Claude/seed/PROJECT_SETUP.md` (v1.6) → repo (landed as v1.7 with rebrand, commit `4e38766`)
+- [x] `~/Claude/seed/MIRROR_PATHS.md` → repo `docs/` with rebrand (v1.1, part of commit `5b18fc4`)
+- [x] `~/Claude/seed/PROJECT_INSTRUCTIONS_WRAPPER.md` → repo `docs/` with rebrand (v1.1, part of commit `5b18fc4`)
+- [x] Promote `README.draft.md` → `README.md` (commit `a750fe7`, 2026-04-23)
 - [ ] Verify Josh's role title in README (currently "Joby Aviation, Advanced Manufacturing" — fill in exact title if needed)
-- [ ] Confirm `.DS_Store` is gitignored
+- [x] Confirm `.DS_Store` is gitignored (commit `a9dffa5`)
 
 ## Phase 1 — Canvas → repo discovery path
 

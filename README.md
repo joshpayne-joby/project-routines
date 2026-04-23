@@ -1,41 +1,97 @@
-# Project Routines
+# seed
 
-Shared behavior definitions for Project Routines — daily cross-project task briefing automation for Joby Advanced Manufacturing.
+A Claude-native project workspace framework for Joby Advanced Manufacturing.
 
-## What This Is
+Seed turns Slack Canvases into a shared project substrate — machine-readable state that both people and Claude work from. Each project gets three canvases; each collaborator gets a daily cross-project briefing built by a scheduled Claude automation; everything stays reachable whether you use Claude Desktop, Claude Code, or just Slack.
 
-This repo is the shared brain for every collaborator's Project Routine. A Routine is a scheduled Claude Code automation that runs daily on Anthropic's cloud infrastructure. Each collaborator has one Routine that iterates across all their active projects, builds a personal "My Tasks" canvas in Slack, and handles notifications.
+This repo is the commons — the behavior spec, the provisioners, and the contracts that hold the whole system together.
 
-## How It Works
+---
 
-1. Each collaborator creates a Routine at claude.ai/code/routines pointing at this repo
-2. The Routine reads `CLAUDE.md` at the start of every run for behavior instructions
-3. The Routine reads the collaborator's "My Tasks" canvas in Slack for their project list
-4. The Routine fetches each project's Claude Canvas (Task Board), builds a cross-project briefing, and writes the "My Tasks" canvas back
+## Start here
 
-## Key Files
+Pick the path that matches where you're coming in:
 
-- `CLAUDE.md` — The behavior spec. Every Routine reads this. Update it → every collaborator gets the update on the next run.
-- `COLLABORATOR_SETUP.md` — Provisioner for new-collaborator onboarding. Drop into a Claude Project as Instructions to spin up a Routine + My Tasks canvas in one conversation.
-- `PRIME_PROJECT_CANVAS.md` — Source-of-truth copy of the seed Prime Project Canvas content. The live canvas in Slack (F0AU9KARVQ8) is what every active Claude Project session reads; this file is the versioned mirror so changes have durable history.
-- `prompts/` — Template Routine prompts for the creation form. Copy, personalize, paste.
+### 👤 I'm on a project and want my own daily briefing
+You're a **collaborator**. Go to [`COLLABORATOR_SETUP.md`](COLLABORATOR_SETUP.md) — drop it into a Claude Project as Instructions, answer three questions, walk away with your "My Tasks" canvas and a ready-to-run Routine. 10 minutes.
 
-## Setup
+### 🏗️ I need to spin up a new project
+You're a **project owner**. Go to [`PROJECT_SETUP.md`](PROJECT_SETUP.md) — drop it into a Claude Project as Instructions, describe the project in one sentence, walk away with three Slack canvases and a registered project. 15 minutes.
 
-**Guided path (recommended):**
+### 🧠 I want to understand or change how this works
+You're an **architect** (or curious). Start with [`CLAUDE.md`](CLAUDE.md) — the behavior spec every Routine reads. Then read [`mirrors/PRIME_PROJECT_CANVAS.md`](mirrors/PRIME_PROJECT_CANVAS.md) for active-session behavior and [`mirrors/CONTROL_TOWER.md`](mirrors/CONTROL_TOWER.md) for the cross-project view. `contracts/` *(coming soon)* will hold the cross-cutting schemas that multiple parts of the system depend on.
 
-1. Create a new Claude Project
-2. Paste `COLLABORATOR_SETUP.md` as the Project Instructions
-3. Open a chat and answer three questions — the provisioner creates your "My Tasks" canvas, generates your Routine prompt, and hands you the copy-paste block for claude.ai/code/routines
+---
 
-**Manual path:**
+## How it fits together
 
-1. Get access to this repo (Joby SSO)
-2. Create your "My Tasks" canvas in Slack (your PM or a Project session can do this)
-3. Go to claude.ai/code/routines → New routine
-4. Point at this repo, copy a prompt from `prompts/`, add a schedule trigger
-5. Hit "Run now" to test
+Three layers, all talking through Slack Canvases:
 
-## Maintained By
+**Per project — three canvases:**
+- **Task Board** (Claude Canvas) — live project state. Claude writes; full-replace only.
+- **Field Reference** (Human Canvas) — photos, drawings, sign-offs. Team writes; Claude reads.
+- **Project Hub** — phase tracker, team roster, onboarding. Both edit occasionally.
 
-Josh Payne — Equipment Engineering Manager, Advanced Manufacturing
+**Per collaborator — one Routine:**
+- Scheduled Claude Code automation, configured at [claude.ai/code/routines](https://claude.ai/code/routines), pointed at this repo.
+- Reads [`CLAUDE.md`](CLAUDE.md) at every run for behavior.
+- Reads the collaborator's "My Tasks" canvas for the project list.
+- Fetches each project's Task Board, builds a cross-project briefing, writes back.
+
+**Across the whole org — two shared canvases:**
+- **Prime Project canvas** — active-session behavior spec. Every project's Claude session reads this first.
+- **seed Registry** — thin index of all active seed projects. Consumed by the Control Tower and missing-project fallbacks.
+
+---
+
+## Live examples
+
+Not just docs — working canvases you can open right now:
+
+| What | Canvas |
+|---|---|
+| A project's Task Board | [AES-PLBSYS](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0ASQ0250NN) |
+| A project's Field Reference | [AES-PLBSYS Field Reference](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0ASTHBK3PW) |
+| A project's Hub | [AES-PLBSYS Hub](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0ASLHJQ57X) |
+| A collaborator's daily briefing | [Josh's My Tasks](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0ATCQNF59V) |
+| The active-session behavior canvas | [Prime Project](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0AU9KARVQ8) |
+| The project index | [seed Registry](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0AUJ8FV6JH) |
+| The cross-project aggregator | [Control Tower Instructions](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0AUGD2CC9J) |
+
+---
+
+## Repo layout
+
+```
+├── README.md                       You are here
+├── CLAUDE.md                       Routine behavior spec (read every run)
+├── COLLABORATOR_SETUP.md           Provisioner — new-collaborator Routine + My Tasks canvas
+├── PROJECT_SETUP.md                Provisioner — new project + three canvases + Registry row
+├── mirrors/                        Versioned snapshots of live Slack canvases
+│   ├── PRIME_PROJECT_CANVAS.md     Active-session behavior (canvas F0AU9KARVQ8)
+│   └── CONTROL_TOWER.md            Cross-project aggregator (canvas F0AUGD2CC9J)
+├── docs/                           Supporting specs and how-tos
+│   ├── MIRROR_PATHS.md             Manual vs. automated session-mirror paths
+│   └── PROJECT_INSTRUCTIONS_WRAPPER.md  Thin per-project Claude Project Instructions wrapper
+├── contracts/                      Cross-cutting schemas (what consumers/producers agree on)  [coming soon]
+├── prompts/                        Per-collaborator Routine prompt files
+│   └── TEMPLATE.md                 Blank template — copy + fill
+└── notes/                          Maintainer scratchpad — tangents, worklog, in-flight thinking
+```
+
+---
+
+## Known limits
+
+- **GitHub App org install pending.** Collaborators can't merge PRs against this repo directly yet — the maintainer commits on their behalf. Drafts and patches welcome via any channel.
+- **Routine creation is browser-only.** No API path. The last step of `COLLABORATOR_SETUP.md` is "paste into [claude.ai/code/routines](https://claude.ai/code/routines) and click New routine."
+- **Slack Canvas writes are full-replace only.** The Slack Canvas API has a confirmed bug where section-level replace on a table creates a ghost duplicate that can't be removed via API. Every write pattern in the system accounts for this.
+- **Slack canvas title slot is API-unsettable.** The `title` parameter on create works; updates to the title after creation require the Slack UI.
+
+---
+
+## Maintainer
+
+Josh Payne — Joby Aviation, Advanced Manufacturing.
+
+Questions, issues, or patches: find me in Slack (`@Josh Payne`) or open an issue on this repo.

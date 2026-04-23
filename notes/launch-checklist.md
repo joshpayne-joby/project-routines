@@ -65,6 +65,12 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 
 - **B3** — Org-level GitHub App install still pending. Collaborators can't merge PRs against this repo; Josh commits on their behalf. Unblocks when IT approves.
 
+## Minor follow-ups surfaced during Phase 1 close (2026-04-23)
+
+- `mirrors/PRIME_PROJECT_CANVAS.md:258` references `MIRROR_PATHS.md` (bare filename). The live canvas `F0AU9KARVQ8` almost certainly still has the same bare ref — fixing just the repo mirror would desync from the canvas. Fix both: edit the live canvas to `docs/MIRROR_PATHS.md`, re-snapshot.
+- `README.md:89` role line ("Joby Aviation, Advanced Manufacturing") — Josh to confirm or refine (was flagged earlier but still pending).
+- Public mirror (`joshpayne-joby/project-routines`) currently carries only the orphan CLAUDE.md + pointer README. When CLAUDE.md changes, re-push the orphan with the new CLAUDE.md so Routines read the latest. None of today's commits touched CLAUDE.md, so mirror is still current.
+
 ## Out-of-scope for launch (upstream decisions, document only)
 
 - Routine creation API (browser-only — upstream Anthropic)

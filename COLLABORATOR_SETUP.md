@@ -47,7 +47,7 @@ Wait for the response. Do not begin setup until you have at least answer 1.
 
 **From question 1** — resolve the Slack user ID via `slack_search_users`. Confirm the match:
 
-"Found you as Kane Miller — UKAN123ABC. Right one?"
+"Found you as Ada Lovelace — UADA123XYZ. Right one?"
 
 If there are multiple matches, list them with titles/emails and confirm. Never guess.
 
@@ -93,7 +93,7 @@ Record `my_tasks_canvas_id` from the response.
 
 ## Generate the Prompt File
 
-Output one downloadable artifact: **[name-slug].md** (e.g. `kane-miller.md`).
+Output one downloadable artifact: **[name-slug].md** (e.g. `ada-lovelace.md`).
 
 Use the template below, filling in the four placeholders:
 

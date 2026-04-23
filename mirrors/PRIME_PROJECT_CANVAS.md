@@ -142,13 +142,13 @@ At session end, offer to mirror the canvas to a durable location. Two options:
 **Manual export (default, always available)**
 
 * Output the full canvas content as a downloadable markdown file
-* Filename: `{plb_mirror_filename_prefix}-{YYYY-MM-DD}.md`
+* Filename: `{seed_mirror_filename_prefix}-{YYYY-MM-DD}.md`
 * PM saves to Drive / SharePoint manually
 * Zero infrastructure required
 
 **Automated mirror (opt-in upgrade)**
 
-* If `plb_mirror_script_url` is set, post the full canvas content to <#C0AS0SN3735>
+* If `seed_mirror_script_url` is set, post the full canvas content to <#C0AS0SN3735>
 * Apps Script picks it up, creates a timestamped Doc, threads the URL back
 * One-time setup — PM configures when ready
 

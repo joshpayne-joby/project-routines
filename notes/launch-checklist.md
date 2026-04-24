@@ -8,12 +8,12 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 
 ## Forward references from README to resolve
 
-- [ ] `contracts/` folder — cross-cutting schemas
-  - [ ] `contracts/seed-registry.md` — canvas `F0AUJ8FV6JH`, three-column table schema, who writes/reads
-  - [ ] `contracts/hub-canvas-registry.md` — KV bullet section every Hub emits
-  - [ ] `contracts/my-tasks-routine-config.md` — machine-readable table schema
-  - [ ] `contracts/claude-canvas-config.md` — the fenced seed Configuration block schema
-  - [ ] `contracts/prime-project-canvas.md` — pointer to `F0AU9KARVQ8` as behavior contract
+- [x] `contracts/` folder — cross-cutting schemas. **Lean scope locked 2026-04-23: ship the two load-bearing contracts only, skip ceremony.**
+  - [x] `contracts/hub-canvas-registry.md` — KV bullet section every Hub emits. **Landed 2026-04-23 v1.0.** Highest-leverage contract (Control Tower + COLLABORATOR_SETUP both parse this).
+  - [x] `contracts/my-tasks-routine-config.md` — machine-readable table schema. **Landed 2026-04-23 v1.0.** Routine's own memory; breaks tomorrow's briefing if schema drifts.
+  - [~] `contracts/seed-registry.md` — skipped for launch. Three-column table is near-self-documenting. Revisit only if a second writer appears.
+  - [~] `contracts/claude-canvas-config.md` — skipped for launch. Fenced `## seed Configuration` block evolves too quickly (digest_*, photo_* fields added per iteration); Prime canvas is the source of truth. Documenting it would just rot.
+  - [~] `contracts/prime-project-canvas.md` — skipped for launch. Prime canvas IS the behavior contract; mirrors/PRIME_PROJECT_CANVAS.md already serves as the versioned pointer.
 - [x] `CONTROL_TOWER.md` — versioned mirror of Control Tower Instructions canvas `F0AUGD2CC9J` — **landed 2026-04-23 at `mirrors/CONTROL_TOWER.md` (v1.3).**
 
 ## Repo visibility and access

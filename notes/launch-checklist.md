@@ -12,7 +12,7 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
   - [x] `contracts/hub-canvas-registry.md` — KV bullet section every Hub emits. **Landed 2026-04-23 v1.0.** Highest-leverage contract (Control Tower + COLLABORATOR_SETUP both parse this).
   - [x] `contracts/my-tasks-routine-config.md` — machine-readable table schema. **Landed 2026-04-23 v1.0.** Routine's own memory; breaks tomorrow's briefing if schema drifts.
   - [~] `contracts/seed-registry.md` — skipped for launch. Three-column table is near-self-documenting. Revisit only if a second writer appears.
-  - [x] `contracts/claude-canvas-config.md` — **Walked back skip 2026-04-23, launched v0.5.** Field directory (not format lock) covering Identity, Canvas Registry, Communication, Photo Breadcrumbs, Mirror, Session State, Digest, Code Integration groups. Surfaced one real drift: digest_* fields referenced in Prime canvas but missing from PROJECT_SETUP v1.7 creation template — flagged in the contract as a next-edit resolution.
+  - [x] `contracts/claude-canvas-config.md` — **Walked back skip 2026-04-23, launched v0.5; tightened to v0.6 same day.** Field directory (not format lock) covering Identity, Canvas Registry, Communication, Photo Breadcrumbs, Mirror, Session State, Digest, Code Integration groups. Surfaced one real drift: digest_* fields referenced in Prime canvas but missing from PROJECT_SETUP v1.7 creation template — flagged in the contract as a next-edit resolution. v0.6 walked back an unearned "load-bearing fence" claim after live-canvas recon showed the fence wasn't preventing any failure mode; dropped `seed_mirror_path` from required fields.
   - [~] `contracts/prime-project-canvas.md` — skipped for launch. Prime canvas IS the behavior contract; mirrors/PRIME_PROJECT_CANVAS.md already serves as the versioned pointer.
 - [x] `CONTROL_TOWER.md` — versioned mirror of Control Tower Instructions canvas `F0AUGD2CC9J` — **landed 2026-04-23 at `mirrors/CONTROL_TOWER.md` (v1.3).**
 
@@ -43,9 +43,9 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 ## Phase 1 — Canvas → repo discovery path
 
 - [ ] Create "seed Overview" canvas in Slack — one screen, ~150 words + prominent repo link. Serves as the Slack-side entry point.
-- [ ] Append repo-link footer to Prime Project canvas (`F0AU9KARVQ8`)
-- [ ] Append repo-link footer to seed Registry canvas (`F0AUJ8FV6JH`)
-- [ ] Append repo-link footer to each production Hub (AMFG-TEMPER, AES-WINGFLIP, AES-527PCO, AES-ACEBRDG, AES-PLBSYS)
+- [x] Append repo-link footer to Prime Project canvas (`F0AU9KARVQ8`) — 2026-04-23
+- [x] Append repo-link footer to seed Registry canvas (`F0AUJ8FV6JH`) — 2026-04-23
+- [x] Append repo-link footer to each production Hub (AMFG-TEMPER `F0ASSM6C23F`, AES-WINGFLIP `F0AUJHC031P`, AES-527PCO `F0AT7RWPUDQ`, AES-ACEBRDG `F0ATCJBTUQK`, AES-PLBSYS `F0ASLHJQ57X`) — 2026-04-23. Private-repo URLs (joby/project-routines); SSO-gated by design.
 
 ## Phase 2 — Validation (before external handoff)
 
@@ -67,7 +67,8 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 
 ## Minor follow-ups surfaced during Phase 1 close (2026-04-23)
 
-- `mirrors/PRIME_PROJECT_CANVAS.md:258` references `MIRROR_PATHS.md` (bare filename). The live canvas `F0AU9KARVQ8` almost certainly still has the same bare ref — fixing just the repo mirror would desync from the canvas. Fix both: edit the live canvas to `docs/MIRROR_PATHS.md`, re-snapshot.
+- [x] `mirrors/PRIME_PROJECT_CANVAS.md:258` bare `MIRROR_PATHS.md` ref — **resolved 2026-04-23.** Live canvas `F0AU9KARVQ8` updated to `docs/MIRROR_PATHS.md` as part of the Prime v1.5 write-back; mirror re-snapshotted to match.
+- [x] **Path A token sweep — seed rebrand across 4 live Claude Canvases + Prime (2026-04-23).** 5 token renames applied per Claude Canvas (`## PLB Configuration` → `## seed Configuration`; `plb_mirror_*` → `seed_mirror_*`; `PLB state file` → `seed state file`) across WINGFLIP (F0ARXHUEA74), 527PCO (F0AT4D7CLN9), ACEBRDG (F0ATK00P44S), TEMPER (F0ASZKZ31PE). Prime canvas (F0AU9KARVQ8) bumped to v1.5 with token renames + `MIRROR_PATHS.md` → `docs/MIRROR_PATHS.md`. Second pass same day cleaned version-line signature glitch (unclosed italic, `<@UNDBYGY1J>` → prose `Josh Payne`, restored "seed" prefix) and synced repo-link footer to prose. All 6 full-replace writes succeeded on first try. TEMPER's `![](slack_date:YYYY-MM-DD)` tokens preserved verbatim; pre-existing TEMPER corruption (duplicate tables) left in place per token-only scope. **Slack title-slot note:** Prime canvas title still reads `Prime Project | Active Session Behavior` with a double-space where a seedling emoji used to be — Slack strips emoji shortcodes from title slots at creation and the API cannot update titles (known platform limit, per `feedback_slack_canvas_title.md`). Body h1 is clean (`# :seedling: Prime Project | Active Session Behavior`). Title-slot fix requires Slack UI rename if ever desired — not blocking.
 - `README.md:89` role line ("Joby Aviation, Advanced Manufacturing") — Josh to confirm or refine (was flagged earlier but still pending).
 - Public mirror (`joshpayne-joby/project-routines`) currently carries only the orphan CLAUDE.md + pointer README. When CLAUDE.md changes, re-push the orphan with the new CLAUDE.md so Routines read the latest. None of today's commits touched CLAUDE.md, so mirror is still current.
 

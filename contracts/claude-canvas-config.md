@@ -1,6 +1,6 @@
 # Claude Canvas Configuration — Field Directory
 
-Every project's Claude Canvas (Task Board) has a `## seed Configuration` section near the top. It's a fenced KV block of machine-readable fields that drive session behavior — channel catch-up, digest posts, photo breadcrumbs, mirror path, session memory.
+Every project's Claude Canvas (Task Board) has a `## seed Configuration` section near the top. It's a KV block of machine-readable fields — grouped under `###` subheaders (Identity, Canvas Registry, Communication, etc.) — that drive session behavior: channel catch-up, digest posts, photo breadcrumbs, mirror path, session memory.
 
 Unlike `hub-canvas-registry.md` and `my-tasks-routine-config.md`, this contract is **not** a parse-format lock. It's a **field directory**: for each field, where is it written, where is it read, and what happens when it drifts or goes missing.
 
@@ -15,15 +15,22 @@ The full block lives in [`PROJECT_SETUP.md`](../PROJECT_SETUP.md) lines 208–25
 ```
 ## seed Configuration
 
-> Machine config block — wrapped in a code fence so Slack does not auto-link URLs across adjacent lines. Write this entire fenced block verbatim.
-
-```
 project_id: ...
+project_display_name: ...
+...
+
+### Canvas Registry (locked at creation)
+
+tasks_canvas_id: ...
+...
+
+### Communication
+
+project_channel_id: ...
 ...
 ```
-```
 
-Note the double fence: the outer `~~~` delimits the Slack-rendered section; the inner triple-backticks hold the config KV pairs. The code fence is load-bearing — without it, Slack auto-links bare URLs and swallows the next key into the anchor.
+Prose form — no code fence. Keys are `snake_case`, values on the same line after `: `. Groups are separated by `###` subheaders (Identity is implicit — first group under the `## seed Configuration` heading, no subheader). Claude is the parser, not a regex: format flexibility is fine as long as keys, values, and group intent are legible.
 
 ---
 
@@ -75,9 +82,8 @@ Fields are grouped by purpose. Groups are comment-delimited in the block (`# Can
 
 |Field|Type|Required|Producer|Consumer|Notes|
 |---|---|---|---|---|---|
-|`seed_mirror_path`|`manual` / `automated`|Yes|PROJECT_SETUP creation; PM upgrade|Session end mirror step|Defaults to `manual`.|
 |`seed_mirror_drive_folder_url`|URL or blank|Optional|PM sets manually|Manual-path filename context|Target folder for saved exports.|
-|`seed_mirror_script_url`|Apps Script URL or blank|Automated only|PM sets after Apps Script deploy|Session end automated-mirror path|Blank means automated path is not configured.|
+|`seed_mirror_script_url`|Apps Script URL or blank|Automated only|PM sets after Apps Script deploy|Session end automated-mirror path|Blank = manual path; populated = automated path.|
 
 See [`docs/MIRROR_PATHS.md`](../docs/MIRROR_PATHS.md) for how these fields interact.
 
@@ -91,7 +97,7 @@ See [`docs/MIRROR_PATHS.md`](../docs/MIRROR_PATHS.md) for how these fields inter
 
 ### Digest (known drift — not in current PROJECT_SETUP template)
 
-The Prime canvas references three digest fields that are **not emitted by PROJECT_SETUP's creation template as of v1.7**:
+The Prime canvas references three digest fields that are **not emitted by PROJECT_SETUP's creation template as of v1.8**:
 
 |Field|Type|Default|Producer|Consumer|Notes|
 |---|---|---|---|---|---|
@@ -140,7 +146,7 @@ Full-replace writes only. Read the whole canvas, edit in memory, write the whole
 |Prime canvas channel catch-up|`project_channel_id`, `last_session_date`|If `project_channel_id` missing or `none` → skip silently.|
 |Prime canvas digest system|`digest_*` fields|All default-off; missing = feature inactive.|
 |Prime canvas photo breadcrumbs|`photo_staging_dm_id`, `photo_project_keywords`|Blank `photo_staging_dm_id` disables feature.|
-|Prime canvas mirror path|`seed_mirror_*` fields, `seed_mirror_filename_prefix`|Missing → defaults to manual path.|
+|Prime canvas mirror path|`seed_mirror_script_url`, `seed_mirror_drive_folder_url`, `seed_mirror_filename_prefix`|Missing `seed_mirror_script_url` → manual path.|
 
 ---
 
@@ -163,5 +169,5 @@ Full-replace writes only. Read the whole canvas, edit in memory, write the whole
 
 ---
 
-*contracts/claude-canvas-config.md v0.5 | April 2026 | Josh Payne*
-*Directory scope, not format lock. Producer of record: PROJECT_SETUP.md v1.7 (lines 208–258). Known drift: digest_* fields (see Digest group above).*
+*contracts/claude-canvas-config.md v0.6 | April 2026 | Josh Payne*
+*Directory scope, not format lock. Producer of record: PROJECT_SETUP.md v1.8 (lines 208–258). Known drift: digest_* fields (see Digest group above). v0.6: walked back the "fence is load-bearing" claim from v0.5 — recon across live canvases showed it wasn't earned. Dropped `seed_mirror_path` from required fields; path is inferred from `seed_mirror_script_url` presence.*

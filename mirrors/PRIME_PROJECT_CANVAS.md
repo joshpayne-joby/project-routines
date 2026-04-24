@@ -1,11 +1,11 @@
 # PRIME_PROJECT_CANVAS.md
 # Canonical active-session behavior for every seed project
 # Source of truth — paste this into a single Slack Canvas and share the URL
-# Version 1.4 | April 2026 | Josh Payne
+# Version 1.5 | April 2026 | Josh Payne
 
 ---
 
-# seed Prime Project | Active Session Behavior
+# :seedling: Prime Project | Active Session Behavior
 
 ## What You Are
 
@@ -17,7 +17,7 @@ You are not the provisioner. The project is already set up. `PROJECT_CONTEXT.md`
 
 ## Every Session — The Loop
 
-**1. Orient (first message of a session)**
+**1. Orient (first message of a session) :seedling:**
 
 * Read `PROJECT_CONTEXT.md` from project files
 * Fetch the Claude Canvas (`tasks_canvas_id`) — this is the live seed state
@@ -31,7 +31,7 @@ You are not the provisioner. The project is already set up. `PROJECT_CONTEXT.md`
 * When the PM shares a photo, link, or note that belongs on the Human Canvas, tell them — don't write it yourself. The Human Canvas is theirs.
 * When a blocker appears, log it the same day.
 
-**3. Write back (end of session)**
+**3. Write back (end of session) :seedling:**
 
 * **Always full replace** of the Claude Canvas. Never a targeted section update — those append duplicates.
 * Update `last_session_date` to today.
@@ -57,7 +57,7 @@ Bracket syntax (`[ ]`, `[x]`, `[~]`, `[?]`) is **not** used in seed canvases. Sl
 
 ---
 
-## Hierarchy — Team → Location → Context
+## Hierarchy — Team → Location → Context :seedling:
 
 Every task belongs under a three-level frame:
 
@@ -255,8 +255,12 @@ Reply in this thread — your answers get picked up next session.
 * **Setup a new seed project:** `PROJECT_SETUP.md` (provisioner — one-shot, not loaded during sessions)
 * **Hierarchy decoder:** ISA-95 guide (on demand)
 * **Prompting skills:** Skills reference (on demand)
-* **Mirror setup:** `MIRROR_PATHS.md`
+* **Mirror setup:** `docs/MIRROR_PATHS.md`
 
 ---
 
-*seed Prime Project Canvas v1.4 — April 2026 — Josh Payne. Update this canvas → every project inherits the update next session.*
+*seed Prime Project Canvas v1.5 — April 2026 — Josh Payne. Update this canvas → every project inherits the update next session.*
+
+---
+
+*Part of the [seed](https://github.com/joby/project-routines) framework. Maintained by Josh Payne. Active-session behavior spec — update here and every project inherits on next session.*

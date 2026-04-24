@@ -208,9 +208,6 @@ Done. Your project is live.
 ~~~
 ## seed Configuration
 
-> Machine config block — wrapped in a code fence so Slack does not auto-link URLs across adjacent lines. Write this entire fenced block verbatim.
-
-```
 project_id: [DOMAIN]-[SHORTNAME]
 project_display_name: [Project name]
 project_original_name: [Name at kickoff]
@@ -219,7 +216,8 @@ file_ecosystem: [google / microsoft / mixed]
 primary_site: [site code]
 team_sites: [comma separated]
 
-# Canvas Registry (locked at creation)
+### Canvas Registry (locked at creation)
+
 tasks_canvas_id: [id]
 tasks_canvas_url: [url]
 human_canvas_id: [id]
@@ -227,24 +225,27 @@ human_canvas_url: [url]
 hub_canvas_id: [id]
 hub_canvas_url: [url]
 
-# Communication
+### Communication
+
 project_channel_id: [channel ID or "none"]
 project_channel_type: [channel / group_dm / none]
 
-# Photo Breadcrumb Config
+### Photo Breadcrumb Config
+
 photo_staging_dm_id: [DM channel ID or blank]
 photo_project_keywords: [project name, nicknames]
 photos_drive_folder_url: [URL or blank]
 
-# Mirror Config
-seed_mirror_path: [manual / automated]
+### Mirror Config
+
 seed_mirror_drive_folder_url: [URL or blank]
 seed_mirror_script_url: [Apps Script URL or blank — automated only]
 last_session_date: [today]
 pending_photo_transfer: false
 pending_photo_count: 0
 
-# Code Integration (leave blank if no code repo)
+### Code Integration (optional — leave blank if no code repo)
+
 repo_path:
 repo_remote:
 repo_platform:
@@ -255,7 +256,6 @@ github_channel_id:
 branching_strategy:
 architecture_canvas_id:
 architecture_canvas_url:
-```
 
 ---
 
@@ -510,7 +510,7 @@ Claude orients new collaborators automatically at their first session.
 
 ---
 
-*PROJECT_SETUP.md v1.7 | April 2026 | Josh Payne*
+*PROJECT_SETUP.md v1.8 | April 2026 | Josh Payne*
 *Provisioner for PROJECT_INSTRUCTIONS.md v3.8+ (now delivered via Prime Project canvas)*
 *Changelog v1.1: emoji status codes, full-replace registry write, mixed ecosystem, no-channel nudge, sharing gate removed*
 *Changelog v1.2: sharing step removed entirely, PROJECT_INSTRUCTIONS.md delivered as Slack canvas pointer not generated artifact*
@@ -519,3 +519,4 @@ Claude orients new collaborators automatically at their first session.
 *Changelog v1.5: Hub template emits `## Canvas Registry` KV section (Project ID, Display Name, Claude Canvas, Human Canvas, Channel, Claude Project) — machine-readable index consumed by seed Routine and Control Tower; replaces `## PLB Canvases` table*
 *Changelog v1.6: template fixes from v1.5 dry run — (a) Hub intro: blank lines between adjacent `**label:** value` paragraphs so Slack doesn't coalesce them, (b) Claude Canvas PLB Configuration: KV content wrapped in a code fence so bare URLs don't auto-link across adjacent lines and swallow the next key into the anchor*
 *Changelog v1.7: PLB → seed rebrand throughout; `## PLB Configuration` header renamed to `## seed Configuration`; `plb_mirror_*` fields renamed to `seed_mirror_*`; filename-prefix default changed from `PLB-[project_id]` to `seed-[project_id]`; file moved from `~/Claude/seed/` scratch into the repo at root*
+*Changelog v1.8: seed Configuration template switches to prose form — inner code fence removed, `# Section` group comments promoted to `### Section` subheaders; `seed_mirror_path` field dropped from template (path is inferred from `seed_mirror_script_url` presence). Walks back the "fence is load-bearing" claim after live-canvas recon showed the fence wasn't preventing any failure mode. Aligns with contracts/claude-canvas-config.md v0.6.*

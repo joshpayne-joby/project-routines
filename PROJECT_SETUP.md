@@ -1,7 +1,7 @@
 # PROJECT_SETUP.md
 # seed Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 1.7 | April 2026 | Josh Payne
+# Version 1.9 | April 2026 | Josh Payne
 
 ---
 
@@ -189,8 +189,8 @@ If the Registry read fails, skip silently and tell the PM: "Registered the canva
 "Here's what to do now:
 
 1. Create a new Claude Project for [project name]
-2. Open the Prime Project canvas: https://jobyaviation.slack.com/docs/T046X1H57/F0AU9KARVQ8
-   Copy the full content and paste it into your new Project's Instructions field
+2. Grab the Instructions wrapper from your seed repo: `docs/PROJECT_INSTRUCTIONS_WRAPPER.md`. Copy the template block between the `===` lines, fill in the five bracketed values (`project_id`, `tasks_canvas_id`, `human_canvas_id`, `hub_canvas_id`, `project_channel_id`) from the `PROJECT_CONTEXT.md` I just generated, and paste that into your new Project's Instructions field.
+   The wrapper is a thin fetcher — it reads the Prime Project canvas at the start of every session, so when seed behavior evolves you inherit the update automatically with no re-paste.
 3. Upload PROJECT_CONTEXT.md and SKILLS.md as project files
 4. Share the Hub with your team: [hub_canvas_url] — that's their entry point
 5. (Optional) Set up the automated mirror when you're ready — for now, Claude will offer a manual markdown export at every session end so you have version history from day one
@@ -510,7 +510,7 @@ Claude orients new collaborators automatically at their first session.
 
 ---
 
-*PROJECT_SETUP.md v1.8 | April 2026 | Josh Payne*
+*PROJECT_SETUP.md v1.9 | April 2026 | Josh Payne*
 *Provisioner for PROJECT_INSTRUCTIONS.md v3.8+ (now delivered via Prime Project canvas)*
 *Changelog v1.1: emoji status codes, full-replace registry write, mixed ecosystem, no-channel nudge, sharing gate removed*
 *Changelog v1.2: sharing step removed entirely, PROJECT_INSTRUCTIONS.md delivered as Slack canvas pointer not generated artifact*
@@ -520,3 +520,4 @@ Claude orients new collaborators automatically at their first session.
 *Changelog v1.6: template fixes from v1.5 dry run — (a) Hub intro: blank lines between adjacent `**label:** value` paragraphs so Slack doesn't coalesce them, (b) Claude Canvas PLB Configuration: KV content wrapped in a code fence so bare URLs don't auto-link across adjacent lines and swallow the next key into the anchor*
 *Changelog v1.7: PLB → seed rebrand throughout; `## PLB Configuration` header renamed to `## seed Configuration`; `plb_mirror_*` fields renamed to `seed_mirror_*`; filename-prefix default changed from `PLB-[project_id]` to `seed-[project_id]`; file moved from `~/Claude/seed/` scratch into the repo at root*
 *Changelog v1.8: seed Configuration template switches to prose form — inner code fence removed, `# Section` group comments promoted to `### Section` subheaders; `seed_mirror_path` field dropped from template (path is inferred from `seed_mirror_script_url` presence). Walks back the "fence is load-bearing" claim after live-canvas recon showed the fence wasn't preventing any failure mode. Aligns with contracts/claude-canvas-config.md v0.6.*
+*Changelog v1.9: Close step 2 swapped from "fat-paste the Prime canvas body into Project Instructions" → "paste the `docs/PROJECT_INSTRUCTIONS_WRAPPER.md` template with five filled values." Behavior updates now ripple through every project automatically via the wrapper instead of requiring every project to re-paste a drifted Prime canvas. Resolves an architecture inconsistency: the wrapper (v1.1) had already replaced fat-paste as the canonical model, but this provisioner's close step had not been updated to match. Companion to BOOTSTRAP.md v0.1.*

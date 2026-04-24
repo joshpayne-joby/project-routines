@@ -12,6 +12,9 @@ This repo is the commons — the behavior spec, the provisioners, and the contra
 
 Pick the path that matches where you're coming in:
 
+### 🌱 I'm the first person setting this up in my workspace
+You're the **first adopter**. There's no seed infrastructure yet — no Prime canvas, no Registry, nothing. Go to [`BOOTSTRAP.md`](BOOTSTRAP.md) — fork the repo, create two shared canvases, onboard yourself, spin up your first project. ~30 minutes. Do this once per workspace.
+
 ### 👤 I'm on a project and want my own daily briefing
 You're a **collaborator**. Go to [`COLLABORATOR_SETUP.md`](COLLABORATOR_SETUP.md) — drop it into a Claude Project as Instructions, answer three questions, walk away with your "My Tasks" canvas and a ready-to-run Routine. 10 minutes.
 
@@ -64,6 +67,7 @@ Not just docs — working canvases you can open right now:
 
 ```
 ├── README.md                       You are here
+├── BOOTSTRAP.md                    First-time setup in a new workspace (one-shot per workspace)
 ├── CLAUDE.md                       Routine behavior spec (read every run)
 ├── COLLABORATOR_SETUP.md           Provisioner — new-collaborator Routine + My Tasks canvas
 ├── PROJECT_SETUP.md                Provisioner — new project + three canvases + Registry row

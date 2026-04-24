@@ -19,7 +19,7 @@ You're a **collaborator**. Go to [`COLLABORATOR_SETUP.md`](COLLABORATOR_SETUP.md
 You're a **project owner**. Go to [`PROJECT_SETUP.md`](PROJECT_SETUP.md) — drop it into a Claude Project as Instructions, describe the project in one sentence, walk away with three Slack canvases and a registered project. 15 minutes.
 
 ### 🧠 I want to understand or change how this works
-You're an **architect** (or curious). Start with [`CLAUDE.md`](CLAUDE.md) — the behavior spec every Routine reads. Then read [`mirrors/PRIME_PROJECT_CANVAS.md`](mirrors/PRIME_PROJECT_CANVAS.md) for active-session behavior and [`mirrors/CONTROL_TOWER.md`](mirrors/CONTROL_TOWER.md) for the cross-project view. The [`contracts/`](contracts/) folder holds the two load-bearing schemas producers and consumers agree on — [`hub-canvas-registry.md`](contracts/hub-canvas-registry.md) and [`my-tasks-routine-config.md`](contracts/my-tasks-routine-config.md).
+You're an **architect** (or curious). Start with [`CLAUDE.md`](CLAUDE.md) — the behavior spec every Routine reads. Then read [`mirrors/PRIME_PROJECT_CANVAS.md`](mirrors/PRIME_PROJECT_CANVAS.md) for active-session behavior and [`mirrors/CONTROL_TOWER.md`](mirrors/CONTROL_TOWER.md) for the cross-project view. The [`contracts/`](contracts/) folder holds the three schemas producers and consumers agree on — [`hub-canvas-registry.md`](contracts/hub-canvas-registry.md), [`my-tasks-routine-config.md`](contracts/my-tasks-routine-config.md), and the [`claude-canvas-config.md`](contracts/claude-canvas-config.md) field directory.
 
 ---
 
@@ -75,7 +75,8 @@ Not just docs — working canvases you can open right now:
 │   └── PROJECT_INSTRUCTIONS_WRAPPER.md  Thin per-project Claude Project Instructions wrapper
 ├── contracts/                      Cross-cutting schemas (what consumers/producers agree on)
 │   ├── hub-canvas-registry.md      Format of the Hub's `## Canvas Registry` KV section
-│   └── my-tasks-routine-config.md  Schema of My Tasks `## Routine Config` table
+│   ├── my-tasks-routine-config.md  Schema of My Tasks `## Routine Config` table
+│   └── claude-canvas-config.md     Field directory for the `## seed Configuration` block
 ├── prompts/                        Per-collaborator Routine prompt files
 │   └── TEMPLATE.md                 Blank template — copy + fill
 └── notes/                          Maintainer scratchpad — tangents, worklog, in-flight thinking

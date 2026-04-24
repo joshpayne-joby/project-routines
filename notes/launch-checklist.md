@@ -12,7 +12,7 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
   - [x] `contracts/hub-canvas-registry.md` — KV bullet section every Hub emits. **Landed 2026-04-23 v1.0.** Highest-leverage contract (Control Tower + COLLABORATOR_SETUP both parse this).
   - [x] `contracts/my-tasks-routine-config.md` — machine-readable table schema. **Landed 2026-04-23 v1.0.** Routine's own memory; breaks tomorrow's briefing if schema drifts.
   - [~] `contracts/seed-registry.md` — skipped for launch. Three-column table is near-self-documenting. Revisit only if a second writer appears.
-  - [~] `contracts/claude-canvas-config.md` — skipped for launch. Fenced `## seed Configuration` block evolves too quickly (digest_*, photo_* fields added per iteration); Prime canvas is the source of truth. Documenting it would just rot.
+  - [x] `contracts/claude-canvas-config.md` — **Walked back skip 2026-04-23, launched v0.5.** Field directory (not format lock) covering Identity, Canvas Registry, Communication, Photo Breadcrumbs, Mirror, Session State, Digest, Code Integration groups. Surfaced one real drift: digest_* fields referenced in Prime canvas but missing from PROJECT_SETUP v1.7 creation template — flagged in the contract as a next-edit resolution.
   - [~] `contracts/prime-project-canvas.md` — skipped for launch. Prime canvas IS the behavior contract; mirrors/PRIME_PROJECT_CANVAS.md already serves as the versioned pointer.
 - [x] `CONTROL_TOWER.md` — versioned mirror of Control Tower Instructions canvas `F0AUGD2CC9J` — **landed 2026-04-23 at `mirrors/CONTROL_TOWER.md` (v1.3).**
 

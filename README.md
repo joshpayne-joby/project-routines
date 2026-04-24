@@ -49,7 +49,7 @@ Three layers, all talking through Slack Canvases:
 
 ## Live examples
 
-Not just docs — working canvases you can open right now:
+Working canvases from Josh's Joby workspace — **not reachable from other Slack tenants.** If you're an adopter standing up seed in your own workspace, treat these as visual reference for what the canvases look like once populated. You'll have your own equivalents after running [`BOOTSTRAP.md`](BOOTSTRAP.md).
 
 | What | Canvas |
 |---|---|

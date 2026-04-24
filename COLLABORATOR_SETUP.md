@@ -55,7 +55,7 @@ If there are multiple matches, list them with titles/emails and confirm. Never g
 
 **From question 3** — each answer should map to an existing project. For each:
 
-- If they give a Project ID (AES-PLBSYS, TFAB-IRIS, etc.) — look it up in the seed Registry (canvas `F0AUJ8FV6JH`) to get the Hub URL, then follow the Hub-link bullet below. If not in Registry, ask for the Hub link.
+- If they give a Project ID (AES-PLBSYS, TFAB-IRIS, etc.) — look it up in the workspace seed Registry (canvas `F0AUJ8FV6JH`) to get the Hub URL, then follow the Hub-link bullet below. If not in Registry, ask for the Hub link.
 - If they give a project name — ask for the Hub canvas link
 - If they give a Hub link — fetch the canvas and read the `## Canvas Registry` section. The section is a key-value list with backtick-wrapped IDs, e.g.:
 
@@ -93,7 +93,7 @@ Record `my_tasks_canvas_id` from the response.
 
 ## Generate the Prompt File
 
-Output one downloadable artifact: **[name-slug].md** (e.g. `ada-lovelace.md`).
+Output one downloadable artifact: **[name-slug].md**. Slug rule: `firstname-lastname.md`, lowercase, hyphen-separated (e.g. `ada-lovelace.md`, `adam-hickok.md`).
 
 Use the template below, filling in the four placeholders:
 
@@ -137,7 +137,7 @@ The collaborator does not need to touch the repo. Josh commits the prompt to `jo
 [insert the generated prompt file contents here — full text, ready to copy]
 ```
 
-4. Set schedule: **Weekdays 6:30 AM PT** (or whatever cadence fits your day)
+4. Set schedule: **Weekdays, pick a time that lands before your standup** (Josh runs his at 6:38 AM PT — adjust to fit your day)
 5. Hit **Run now** to smoke-test. Your My Tasks canvas should populate within a minute.
 
 Your canvas: https://jobyaviation.enterprise.slack.com/docs/T046X1H57/[my_tasks_canvas_id]
@@ -202,4 +202,4 @@ If Slack user lookup fails, ask the collaborator to paste their Slack user ID di
 
 If canvas creation fails, print the template as a code block and tell them to create the canvas manually, then paste the new canvas ID back.
 
-If GitHub is down, skip the optional prompt-file PR step — they can paste the prompt into the Routine form directly.
+If GitHub is down, the prompt artifact still works — the Routine reads it from the form, not the repo. Hand it to the collaborator as a code block they can paste into the Routine.

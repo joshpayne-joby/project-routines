@@ -1,7 +1,7 @@
 # PROJECT_SETUP.md
 # seed Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 1.10 | April 2026 | Josh Payne
+# Version 1.11 | April 2026 | Josh Payne
 
 ---
 
@@ -34,6 +34,14 @@ Before any full-canvas replace, fetch the full current canvas content. Modify it
 **Rule 4 — If a write fails, paste in chat.**
 
 If a canvas write fails, output the full updated canvas content as a fenced code block in chat and tell the PM: *"Write failed. Copy the block above and paste into [canvas link] — replacing all content."* Never let provisioning state go silently wrong.
+
+**Rule 5 — On `slack_create_canvas`, the title goes ONLY in the `title` parameter.**
+
+Do not also place a `# [Canvas Name]` h1 at the top of the body content. Slack stores the title slot and body h1 independently and renders both, producing a visible 2× duplicate header. The body should start with the first paragraph or `##` sub-heading. (This generalizes the warning already present in COLLABORATOR_SETUP for My Tasks canvases.)
+
+**Rule 6 — Full-canvas replace ghosts a CHANGED h1, not a removed one.**
+
+Full-canvas replace cleans up cleanly when the new content has the same h1 as the old, or no h1 at all. It does NOT clean up when the new content has a *different* h1 — the old h1 persists as a ghost block above the new one, and only Slack UI deletion can remove it. If a canvas h1 rename is unavoidable, plan for a manual UI cleanup pass after the API write; otherwise keep the h1 stable across patches. The provisioner's flows don't currently change h1s on existing canvases, so this is a future-proofing rule, not a hot path.
 
 ---
 
@@ -542,7 +550,7 @@ Claude orients new collaborators automatically at their first session.
 
 ---
 
-*PROJECT_SETUP.md v1.10 | April 2026 | Josh Payne*
+*PROJECT_SETUP.md v1.11 | April 2026 | Josh Payne*
 *Provisioner for PROJECT_INSTRUCTIONS.md v3.8+ (now delivered via Prime Project canvas)*
 *Changelog v1.1: emoji status codes, full-replace registry write, mixed ecosystem, no-channel nudge, sharing gate removed*
 *Changelog v1.2: sharing step removed entirely, PROJECT_INSTRUCTIONS.md delivered as Slack canvas pointer not generated artifact*
@@ -554,3 +562,4 @@ Claude orients new collaborators automatically at their first session.
 *Changelog v1.8: seed Configuration template switches to prose form — inner code fence removed, `# Section` group comments promoted to `### Section` subheaders; `seed_mirror_path` field dropped from template (path is inferred from `seed_mirror_script_url` presence). Walks back the "fence is load-bearing" claim after live-canvas recon showed the fence wasn't preventing any failure mode. Aligns with contracts/claude-canvas-config.md v0.6.*
 *Changelog v1.9: Close step 2 swapped from "fat-paste the Prime canvas body into Project Instructions" → "paste the `docs/PROJECT_INSTRUCTIONS_WRAPPER.md` template with five filled values." Behavior updates now ripple through every project automatically via the wrapper instead of requiring every project to re-paste a drifted Prime canvas. Resolves an architecture inconsistency: the wrapper (v1.1) had already replaced fat-paste as the canonical model, but this provisioner's close step had not been updated to match. Companion to BOOTSTRAP.md v0.1.*
 *Changelog v1.10: new top-level "Canvas Write Rules" section mirrors Prime/Control Tower's write-back rules — creates use `slack_create_canvas` with full content, post-creation edits use `slack_update_canvas` with `action=replace` and no `section_id`. New explicit "Hub patch — backfill the Claude Canvas ID" step at the end of Create the Canvases: after Claude Canvas creation, patch the Hub's `Claude Canvas:` placeholder via full-canvas replace. Closes a spec gap surfaced by the v1.9 smoke test on AMFG-SEEDTEST — the provisioner correctly created canvases in order but improvised section-replace for the Hub patch, triggering Slack's section-replace-appends-duplicate bug and leaving a ghost empty table row. Full-canvas replace is now spelled out as the only supported patch pattern, no exceptions.*
+*Changelog v1.11: Canvas Write Rules grow two new rules surfaced by 2026-04-24 canvas work. Rule 5: on create, the title goes only in the `title` parameter — never duplicate it as a body h1, since Slack renders title slot + body h1 independently and produces a 2× duplicate (observed creating Adam's onboarding canvas; generalizes the warning already in COLLABORATOR_SETUP). Rule 6: full-canvas replace ghosts a *changed* h1 but cleans cleanly on a *removed* h1 — observed renaming the seed Registry (h1 ghosted, required Slack UI cleanup) versus removing the duplicate h1 from Adam's onboarding canvas (cleaned cleanly). Future-proofing — the provisioner's current flows don't change existing-canvas h1s, but the rules belong here so anyone debugging a canvas write knows the failure modes.*

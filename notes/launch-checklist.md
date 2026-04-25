@@ -49,7 +49,7 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 
 ## Phase 2 — Validation (before external handoff)
 
-- [ ] Live-test Control Tower v1.3 missing-project fallback (low stakes, Josh's account only)
+- [~] Live-test Control Tower v1.3 missing-project fallback (low stakes, Josh's account only) — **partial pass 2026-04-24.** Asked CT (`F0AUGD2CC9J`-deployed) `What's the status on AES-527PCO?`. Round 1: fuzzy-match short-circuit — CT skipped Step 1, suggested AMFG-527OVEN from Routine Config without consulting seed Registry. Round 2 (after push-back): CT read seed Registry, resolved AES-527PCO → Hub `F0AT7RWPUDQ`, recognized Hub already represented in My Tasks under `AMFG-527OVEN`, correctly refused duplicate write. Dedup behavior tested cleanly via Hub-overlap. Write path untested by design (Registry has no projects genuinely missing from My Tasks). Side finding: AES-/AMFG- prefix drift between seed Registry and Routine Config is REAL for both `527PCO` ↔ `527OVEN` and `ACEBRDG` ↔ `PANELBOM` (same Hub canvases under different IDs) — deferred per Josh "let it ride until rewrite." v1.4 patch queued (see below).
 - [~] Smoke-test COLLABORATOR_SETUP.md v0.4 on a real new collaborator — **handed to Adam Hickok 2026-04-24** via fresh onboarding canvas `F0AV0JM98HH` + seed Overview `F0AV3E41QJ2`. Pre-handoff polish landed in commit `640acd2` (slug rule, schedule, Registry phrasing, GitHub-down fallback wording). Old PLB-branded onboarding canvas `F0AU8HUDH1S` deleted by Josh as part of cleanup. Awaiting Adam's run-through.
 - [x] Smoke-test PROJECT_SETUP.md on a real new project — **two iterations 2026-04-24.** v1.9 surfaced ghost-table on Hub post-creation patch (provisioner improvised section-replace, Slack's section-replace bug duplicated the table). v1.10 fixed by codifying Canvas Write Rules + explicit Hub-patch sub-step (full-canvas replace, no section_id). Re-smoke clean. All 6 throwaway canvases + 2 Claude Projects cleaned up by Josh.
 
@@ -77,12 +77,21 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 ## Minor follow-ups surfaced 2026-04-24
 
 - seed Registry canvas instance renamed to "Advanced Manufacturing seed Registry" (body h1 + title slot, `F0AUJ8FV6JH`). Concept name "seed Registry" unchanged in contracts/provisioners — distinguishing the workspace instance from the pattern.
-- PROJECT_SETUP.md bumped v1.7 → v1.10 over the course of the day. v1.8 fixed header/footer version mismatch. v1.9 aligned the close step with the wrapper (replaced stale fat-paste path). v1.10 added a "Canvas Write Rules" section + explicit Hub-patch sub-step after a v1.9 smoke surfaced the ghost-table bug on Hub post-creation patch.
+- PROJECT_SETUP.md bumped v1.7 → v1.11 over the course of the day. v1.8 fixed header/footer version mismatch. v1.9 aligned the close step with the wrapper (replaced stale fat-paste path). v1.10 added a "Canvas Write Rules" section + explicit Hub-patch sub-step after a v1.9 smoke surfaced the ghost-table bug on Hub post-creation patch. v1.11 added Rule 5 (title parameter only — never duplicate in body h1) and Rule 6 (full-replace ghosts an h1 *change* but cleans an h1 *removal*) — both surfaced live during the day's canvas work and codified into the spec the same day.
 - COLLABORATOR_SETUP v0.4 sanity-read audit landed pre-handoff polish edits (commit `640acd2`): explicit slug rule (`firstname-lastname.md`), schedule reframing, "workspace seed Registry" phrasing, GitHub-down fallback rewrite.
 - Public mirror state confirmed current 2026-04-24: CLAUDE.md SHA `b390f388...` matches local. No drift since 2026-04-23 force-push.
-- Canvas write nuances learned 2026-04-24 (not yet codified into PROJECT_SETUP's Canvas Write Rules — current provisioner flows don't hit them, but worth capturing):
-  - Full-replace ghosts the h1 when the h1 *changes* (observed renaming the Registry — Josh did Slack UI cleanup); cleans cleanly when the body h1 is *removed* (observed fixing Adam's onboarding canvas).
-  - Creating a canvas with both the `title` parameter AND a body h1 always renders 2× (Slack stores them independently — known quirk per `feedback_slack_canvas_title.md`). COLLABORATOR_SETUP warns about this for My Tasks; the warning generalizes to any canvas creation.
+- Canvas write nuances learned 2026-04-24 — **codified into PROJECT_SETUP v1.11 Canvas Write Rules (commit `1f250d3`):**
+  - Rule 5 — Creating a canvas with both the `title` parameter AND a body h1 always renders 2× (Slack stores them independently — known quirk per `feedback_slack_canvas_title.md`). Generalized from COLLABORATOR_SETUP's My Tasks warning to all canvas creation.
+  - Rule 6 — Full-replace ghosts the h1 when the h1 *changes* (observed renaming the Registry — Josh did Slack UI cleanup); cleans cleanly when the body h1 is *removed* (observed fixing Adam's onboarding canvas). Asymmetry now in the spec.
+
+## CT v1.4 patch — applied 2026-04-24
+
+Landed both changes to the Fallback section. Canonical `mirrors/CONTROL_TOWER.md` updated; canvas `F0AUGD2CC9J` full-replaced clean (body h1 stripped, version lives in footer only — eliminates h1-change ghost risk on future bumps). Per Adam-canvas asymmetry: h1 *removal* cleans, h1 *change* ghosts. Stripping the body h1 was the right play.
+
+- **Anti-fuzzy-match guard** (Fallback intro): *"Do not ask for a Hub link, **and do not offer a similar-looking ID from My Tasks as an alternative**, until you've consulted the seed Registry."*
+- **Raise-mismatches-up rule** (new paragraph in Fallback intro): *"If the seed Registry and My Tasks disagree on the Project ID for the same Hub, if a referenced ID resolves to a Hub already represented under a different ID, or any other inconsistency surfaces during the lookup — surface it explicitly to the owner before continuing. Don't silently dedup, rename, or work around it. The mismatch is signal that wants a decision."*
+
+**Outstanding for Josh:** re-paste the v1.4 instructions into his deployed CT Claude Project Instructions (https://claude.ai/project/019db149-8d23-7093-895c-05183cd4e36d). Canvas-only update doesn't auto-propagate to live Project Instructions.
 - Adam's old onboarding canvas `F0AU8HUDH1S` deleted by Josh 2026-04-24 (PLB-branded, fork-required, corrupted with duplicate sections from prior section-replace bugs). Replaced by `F0AV0JM98HH`.
 
 ## Out-of-scope for launch (upstream decisions, document only)

@@ -74,6 +74,22 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 - `README.md:89` role line ("Joby Aviation, Advanced Manufacturing") — Josh to confirm or refine (was flagged earlier but still pending).
 - Public mirror (`joshpayne-joby/project-routines`) currently carries only the orphan CLAUDE.md + pointer README. When CLAUDE.md changes, re-push the orphan with the new CLAUDE.md so Routines read the latest. None of today's commits touched CLAUDE.md, so mirror is still current.
 
+## seed Changelog architecture (Stage 1 done 2026-04-26)
+
+**Distribution layer for framework updates.** Reviewed via Control Tower + Project Instructions chats; both converged on a four-tier model. Stage 1 builds the source-of-truth canvas; Stages 2–3 wire it into daily flow.
+
+- [x] **Stage 1 — seed Changelog canvas** (`F0AVAB5Q4KY`, 2026-04-26). Format `YYYY-MM-DD — [Component] [Version] — [Title] (SEMVER)`. Seeded with two real entries (CLAUDE.md v2.1 PATCH, Control Tower v1.4 MINOR). Linked from seed Overview canvas. Single source of truth — no parallel records.
+- [x] **Stage 2 — "What's New in seed" My Tasks emit** (CLAUDE.md v2.2, commit `6105809`, 2026-04-26). Three additions: new "Read the seed Changelog" parsing section, new "Output format — What's New in seed" rendering section, write order updated (item #1, hidden if empty). Italic scope-clarifying subhead distinguishes from "What Changed Since Last Run." Payload cost ~5–10 lines per run when entries exist; offset planned via compact-quiet-project skill (next release).
+- [ ] **Stage 3 — `#plb-mirror` → `#seed-updates` rename + pin Changelog canvas.** PATCH stays silent in channel (changelog only); MINOR gets one-liner; MAJOR gets full notice + DM. ~5 min when ready.
+- [ ] **Stage 4 — migration notes on MAJOR only.** No work until first MAJOR release.
+
+**Decisions resolved during review:**
+- Component-scoped versioning, not single rolling seed-framework version (components evolve at different rates).
+- "What's New" placement: My Tasks (cross-project ambient layer), not Hub canvases (per-project context).
+- Window: "last 3 entries since last successful Routine run." No arbitrary calendar window. Hides if empty.
+- MINOR is NOT silent — gets a Slack post. Both reviewers pushed back hard on the original "MINOR silent" proposal.
+- Channel: rename `#plb-mirror` (already earmarked for retirement) rather than create `#seed-updates` from scratch.
+
 ## Minor follow-ups surfaced 2026-04-24
 
 - seed Registry canvas instance renamed to "Advanced Manufacturing seed Registry" (body h1 + title slot, `F0AUJ8FV6JH`). Concept name "seed Registry" unchanged in contracts/provisioners — distinguishing the workspace instance from the pattern.

@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2
+# CLAUDE.md — project-routines v2.1
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -53,11 +53,11 @@ The person's "My Tasks" canvas title follows the pattern: `[Name] | My Tasks`
 
 At the start of every run:
 1. Read the person's "My Tasks" canvas
-2. Find the **Routine Config** table — this is the machine-readable table at the bottom  [v2]
-3. Find the **Project Registry** table — this is the human-readable navigation table  [v2]
-4. The Routine Config table has the IDs you need: Project ID, Claude Canvas ID, Hub Canvas ID, Human Canvas ID, Channel ID  [v2]
+2. Find the **Routine Config** table — this is the machine-readable table at the bottom
+3. Find the **Project Registry** table — this is the human-readable navigation table
+4. The Routine Config table has the IDs you need: Project ID, Claude Canvas ID, Hub Canvas ID, Human Canvas ID, Channel ID, and optional Claude Project URL
 
-# The two registry tables  [v2 — NEW]
+# The two registry tables
 
 The My Tasks canvas has TWO tables at the bottom:
 
@@ -76,19 +76,20 @@ This is what the person sees and clicks. Columns:
 ## Routine Config (machine-readable)
 This is what YOU read to get IDs. Columns:
 
-| Project ID | Claude Canvas ID | Hub Canvas ID | Human Canvas ID | Channel ID |
-|---|---|---|---|---|
-| AES-PLBSYS | F0ASQ0250NN | F0ASLHJQ57X | F0ASTHBK3PW | C0ATGG9GTUJ |
+| Project ID | Claude Canvas ID | Hub Canvas ID | Human Canvas ID | Channel ID | Claude Project URL |
+|---|---|---|---|---|---|
+| AES-PLBSYS | F0ASQ0250NN | F0ASLHJQ57X | F0ASTHBK3PW | C0ATGG9GTUJ | https://claude.ai/project/abc123 |
 
 - All IDs are raw Slack IDs — no links, no formatting
 - `—` means not configured
 - `none` in Channel ID means no project channel
+- `Claude Project URL` is optional — if missing or `—`, omit it from the context line on output
 
 The Routine reads from **Routine Config** for all data fetching. It writes both tables back.
 
 When a new project is added manually, the person may add it to either table. The Routine should sync: if a row exists in one table but not the other, add it to both on the next write.
 
-# [v2] New field: claude_project_url
+# Field: claude_project_url
 
 The Routine Config table gains an optional column: `Claude Project URL`. This is the `https://claude.ai/project/[id]` link to the actual Claude Project on claude.ai.
 
@@ -109,7 +110,7 @@ For each project:
    - Look for: decisions, blockers, questions, photos, digest thread replies
    - If channel read fails: note it, continue
 
-3. **Read the Human Canvas** using the Human Canvas ID (if not `—`)  [v2]
+3. **Read the Human Canvas** using the Human Canvas ID (if not `—`)
    - Read for context only — photos, drawings, field notes added since last run
    - Do not surface full content — just flag if new content was added
 
@@ -121,7 +122,7 @@ For each project:
    - Read session log entries since last run
    - If new entries exist: someone worked on this project — record who and what changed
 
-# Output format — Active Projects sections  [v2 — UPDATED]
+# Output format — Active Projects sections
 
 Each project gets a section in the Active Projects area. Format:
 
@@ -139,7 +140,7 @@ Last session: [date] — [who] | [Claude Project](claude_project_url) | ![](#cha
 *[N] active shown — [N] not started hidden*
 ```
 
-**Context line rules:**  [v2]
+**Context line rules:**
 - Project name in the header is ALWAYS a link to the Hub canvas
 - Only include items in the context line that exist:
   - Claude Project link: only if `claude_project_url` is populated in Routine Config
@@ -152,12 +153,12 @@ Last session: [date] — [who] | [Claude Project](claude_project_url) | ![](#cha
 
 Full (all links available):
 ```
-Last session: 2026-04-20 — Josh | [Claude Project](https://claude.ai/project/abc123) | ![](#C0ATGG9GTUJ) | [Field Reference](https://jobyaviation.slack.com/docs/T046X1H57/F0ASTHBK3PW)
+Last session: 2026-04-20 — Josh | [Claude Project](https://claude.ai/project/abc123) | ![](#C0ATGG9GTUJ) | [Field Reference](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0ASTHBK3PW)
 ```
 
 No channel, no Claude Project link:
 ```
-Last session: 2026-04-17 — Adam | [Field Reference](https://jobyaviation.slack.com/docs/T046X1H57/F0AU4UJRM8S)
+Last session: 2026-04-17 — Adam | [Field Reference](https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0AU4UJRM8S)
 ```
 
 Nothing except last session:
@@ -165,7 +166,7 @@ Nothing except last session:
 Last session: 2026-04-09 — Josh
 ```
 
-# Output format — Waiting On You  [v2 — UPDATED]
+# Output format — Waiting On You
 
 ```
 ## Waiting On You
@@ -187,7 +188,7 @@ Project column links to Hub canvas.
 
 Project references in this section are bold text, not linked. The Hub link is always available in the Active Projects section below.
 
-# Output format — Project Registry  [v2 — UPDATED]
+# Output format — Project Registry
 
 When writing the canvas back, write BOTH tables:
 
@@ -221,6 +222,8 @@ Always full replace of the entire canvas. Never targeted section update.
 
 **Canvas Write Rule — Full replace only, no exceptions.**
 All canvas writes must use action=replace without a section_id. Never use section-level replace on any canvas section, especially tables. The Slack Canvas API has a confirmed bug: replacing a table section creates a ghost duplicate empty table that cannot be removed via the API — the only fix is a full canvas rewrite. Pattern: read the full canvas → hold content in memory → make all changes → write the entire canvas back in a single call.
+
+For the full set of canvas write rules used by the seed provisioner (title-vs-body-h1 duplication, h1-change ghost asymmetry, @mention format read↔write translation, etc.), see `PROJECT_SETUP.md` § Canvas Write Rules. The full-replace rule above is the load-bearing one for Routine writes; the rest cover provisioner-time edge cases the Routine doesn't usually hit.
 
 Write order:
 1. Scorecard summary table
@@ -279,6 +282,11 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.1 — 2026-04-25
+# - Stripped [v2 — UPDATED] / [v2 — NEW] / [v2] in-progress edit markers (10 instances) — changelog already serves the purpose
+# - Routine Config schema synced to 6 columns (added Claude Project URL) — matches contracts/my-tasks-routine-config.md v1.0; was internally inconsistent in v2 (5 cols in section example, 6 cols in writeback example)
+# - Slack URLs unified to enterprise format (jobyaviation.enterprise.slack.com) — improves connector compat for users hitting auth issues on the bare jobyaviation.slack.com host
+# - Added pointer to PROJECT_SETUP.md Canvas Write Rules so Routine maintainers can find the full rule set without duplicating it here
 # v2 — 2026-04-20
 # - Split registry into two tables: Project Registry (human nav) + Routine Config (machine IDs)
 # - Project names link to Hub canvas in headers, registry, and Waiting On You

@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.1
+# CLAUDE.md — project-routines v2.2
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -97,6 +97,23 @@ If populated, the Routine includes it in the context line under each Active Proj
 
 If not populated, omit it from the context line — don't show a broken or empty link.
 
+# Read the seed Changelog
+
+After reading My Tasks but before iterating projects, fetch the seed Changelog canvas (`F0AVAB5Q4KY`). This surfaces framework-level updates the collaborator should know about — distinct from project activity.
+
+How to read it:
+
+1. Call `slack_read_canvas` with canvas_id `F0AVAB5Q4KY`.
+2. Extract `last_run_date` from the My Tasks "Last updated: YYYY-MM-DD ..." line. If the line is missing or the date can't be parsed, treat as `0000-00-00` (all entries will qualify).
+3. Walk the canvas `markdown_content`. Each release entry is an H2 header (`## `) starting with a `YYYY-MM-DD` date prefix followed by ` — [Component] [Version] — [Title] (SEMVER)`. Skip any H2 that doesn't match this pattern (intro headings, format guides, etc.).
+4. For each matching entry, capture: date, the rest of the H2 line (component / version / title / SEMVER), and the "What you should do:" line that follows the bullets.
+5. Filter to entries where `entry_date > last_run_date` (string compare on YYYY-MM-DD works because of the format).
+6. Sort by date descending. Take the top 3.
+
+If the canvas read fails, no entries match, or the canvas is empty: output nothing and continue with the rest of the run. Do not render an empty "What's New in seed" section.
+
+The result feeds the **Output format — What's New in seed** section below.
+
 # Reading projects — for each row in Routine Config
 
 For each project:
@@ -188,6 +205,38 @@ Project column links to Hub canvas.
 
 Project references in this section are bold text, not linked. The Hub link is always available in the Active Projects section below.
 
+# Output format — What's New in seed
+
+If the seed Changelog read returned 0 entries (or the read failed), omit this entire section — no header, no placeholder.
+
+Otherwise:
+
+```
+## What's New in seed
+*Framework changes affecting all your projects.*
+
+**[Component] [Version]** ([SEMVER]) — [date]: [title]. [What you should do, or "No action needed".] Commit: `[shortsha]`.
+```
+
+One bold-lead line per entry, max 3 entries, newest first.
+
+The italic subhead distinguishes this from "What Changed Since Last Run" (project activity, not framework changes). Both are top-of-canvas sections but their scopes are different.
+
+Worked example:
+
+```
+## What's New in seed
+*Framework changes affecting all your projects.*
+
+**CLAUDE.md v2.2** (MINOR) — 2026-04-26: "What's New in seed" emit added. No action needed — Routines pick it up automatically. Commit: `<shortsha>`.
+
+**CLAUDE.md v2.1** (PATCH) — 2026-04-25: cleanup pass. No action needed. Commit: `a64f499`.
+
+**Control Tower v1.4** (MINOR) — 2026-04-24: anti-fuzzy guard + raise-mismatches-up rule. Re-paste v1.4 instructions into deployed CT Project Instructions. Commit: `9962ace`.
+```
+
+This section sits at the very TOP of the canvas, before the scorecard and before "What Changed Since Last Run" (see the Writing back section's write order).
+
 # Output format — Project Registry
 
 When writing the canvas back, write BOTH tables:
@@ -226,13 +275,14 @@ All canvas writes must use action=replace without a section_id. Never use sectio
 For the full set of canvas write rules used by the seed provisioner (title-vs-body-h1 duplication, h1-change ghost asymmetry, @mention format read↔write translation, etc.), see `PROJECT_SETUP.md` § Canvas Write Rules. The full-replace rule above is the load-bearing one for Routine writes; the rest cover provisioner-time edge cases the Routine doesn't usually hit.
 
 Write order:
-1. Scorecard summary table
-2. What Changed Since Last Run
-3. Waiting On You (if any items)
-4. Active Projects sections (one per project)
-5. Project Registry (human navigation table)
-6. Routine Config (machine ID table)
-7. Footer note about the Routine
+1. What's New in seed (if entries since last run; otherwise omit entirely)
+2. Scorecard summary table
+3. What Changed Since Last Run
+4. Waiting On You (if any items)
+5. Active Projects sections (one per project)
+6. Project Registry (human navigation table)
+7. Routine Config (machine ID table)
+8. Footer note about the Routine
 
 # Canvas fetch failure handling
 
@@ -282,6 +332,11 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.2 — 2026-04-26
+# - Added "Read the seed Changelog" step — Routine fetches F0AVAB5Q4KY each run, filters entries newer than the prior My Tasks "Last updated" stamp, caps at 3 most recent
+# - New "Output format — What's New in seed" section — bold-lead one-line entries with scope-clarifying italic subhead, distinct from "What Changed Since Last Run"
+# - Write order updated: "What's New in seed" emits as item #1 (top of canvas, above scorecard) when entries exist, hidden if empty
+# - Closes the seed Changelog architecture loop: collaborators see framework news in their daily briefing automatically
 # v2.1 — 2026-04-25
 # - Stripped [v2 — UPDATED] / [v2 — NEW] / [v2] in-progress edit markers (10 instances) — changelog already serves the purpose
 # - Routine Config schema synced to 6 columns (added Claude Project URL) — matches contracts/my-tasks-routine-config.md v1.0; was internally inconsistent in v2 (5 cols in section example, 6 cols in writeback example)

@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.2
+# CLAUDE.md — project-routines v2.3
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -143,6 +143,8 @@ For each project:
 
 Each project gets a section in the Active Projects area. Format:
 
+**Quiet Projects exception.** For any project meeting all three compact criteria (stale 7+ days, no red flags, not in Waiting On You), use the `compact-quiet-project` skill at `.claude/skills/compact-quiet-project/SKILL.md` instead of rendering a full section. Compacted entries collect under a single "Quiet Projects (N)" section after the last Active Projects section, before Project Registry. See the skill for the exact format and promote-back rules.
+
 ```
 ### [Project Display Name](hub_canvas_url)
 
@@ -279,10 +281,11 @@ Write order:
 2. Scorecard summary table
 3. What Changed Since Last Run
 4. Waiting On You (if any items)
-5. Active Projects sections (one per project)
-6. Project Registry (human navigation table)
-7. Routine Config (machine ID table)
-8. Footer note about the Routine
+5. Active Projects sections (one per project — full format)
+6. Quiet Projects section (compacted entries grouped under single header; omit entirely if zero qualify)
+7. Project Registry (human navigation table)
+8. Routine Config (machine ID table)
+9. Footer note about the Routine
 
 # Canvas fetch failure handling
 
@@ -332,6 +335,11 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.3 — 2026-04-26
+# - Added compact-quiet-project skill at .claude/skills/compact-quiet-project/SKILL.md — collapses projects with no recent activity, no red flags, no waiting-on-you items into one-line summaries
+# - Quiet projects group under a single "Quiet Projects (N)" section placed after Active Projects, before Project Registry; omitted entirely if zero qualify
+# - Reduces briefing payload: ~6-10 lines saved per qualifying project. Audit at release: 4 of Josh's 14 projects qualify (~24 lines saved).
+# - Output format updated: skill referenced from "Output format — Active Projects sections"; write order item 6 added for Quiet Projects section
 # v2.2 — 2026-04-26
 # - Added "Read the seed Changelog" step — Routine fetches F0AVAB5Q4KY each run, filters entries newer than the prior My Tasks "Last updated" stamp, caps at 3 most recent
 # - New "Output format — What's New in seed" section — bold-lead one-line entries with scope-clarifying italic subhead, distinct from "What Changed Since Last Run"

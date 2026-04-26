@@ -79,7 +79,20 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 **Distribution layer for framework updates.** Reviewed via Control Tower + Project Instructions chats; both converged on a four-tier model. Stage 1 builds the source-of-truth canvas; Stages 2–3 wire it into daily flow.
 
 - [x] **Stage 1 — seed Changelog canvas** (`F0AVAB5Q4KY`, 2026-04-26). Format `YYYY-MM-DD — [Component] [Version] — [Title] (SEMVER)`. Seeded with two real entries (CLAUDE.md v2.1 PATCH, Control Tower v1.4 MINOR). Linked from seed Overview canvas. Single source of truth — no parallel records.
-- [x] **Stage 2 — "What's New in seed" My Tasks emit** (CLAUDE.md v2.2, commit `6105809`, 2026-04-26). Three additions: new "Read the seed Changelog" parsing section, new "Output format — What's New in seed" rendering section, write order updated (item #1, hidden if empty). Italic scope-clarifying subhead distinguishes from "What Changed Since Last Run." Payload cost ~5–10 lines per run when entries exist; offset planned via compact-quiet-project skill (next release).
+- [x] **Stage 2 — "What's New in seed" My Tasks emit** (CLAUDE.md v2.2, commit `6105809`, 2026-04-26). Three additions: new "Read the seed Changelog" parsing section, new "Output format — What's New in seed" rendering section, write order updated (item #1, hidden if empty). Italic scope-clarifying subhead distinguishes from "What Changed Since Last Run." Payload cost ~5–10 lines per run when entries exist; offset by compact-quiet-project skill in same-day release.
+
+## compact-quiet-project skill (CLAUDE.md v2.3, MINOR, 2026-04-26)
+
+**First Claude Code Skill in the framework.** Lives at `.claude/skills/compact-quiet-project/SKILL.md`. Reduces briefing payload by collapsing quiet projects into one-line summaries grouped under a "Quiet Projects (N)" section.
+
+- Commit: `c3aac16`
+- Quietness rule: stale 7+ days AND zero `:red_circle:` tasks AND not in "Waiting On You" — all three must be true.
+- Audit at release (Josh's 14-project My Tasks): 4 qualify — Grieve Oven Exhaust Hood (10d), Skinners Onboarding (10d), R&D Machine Shop Portal (11d), Automated Circular Saw (17d). Estimated ~24 lines saved.
+- Disqualifiers seen in audit: 7 projects not stale (recent activity), 3 projects stale-but-red-flagged (Temper / 527 Oven / Pickle), 0 in Waiting On You (section is currently empty).
+- Net payload effect after v2.2 + v2.3: roughly **-15 to -25 lines**, addresses the stream idle timeout pattern Josh has been hitting.
+- Side finding: scorecard header in My Tasks claims "5 stale" but actual count under the 7-day rule is 7 — pre-existing data drift, surfaced per `feedback_raise_mismatches_up.md`. Not blocking the release; will resolve on next Routine run when the scorecard regenerates.
+
+**First seed framework skill — pattern established.** Future skills follow the same path: `.claude/skills/<skill-name>/SKILL.md` in canonical, mirrored to public, referenced from CLAUDE.md by name + path.
 - [ ] **Stage 3 — `#plb-mirror` → `#seed-updates` rename + pin Changelog canvas.** PATCH stays silent in channel (changelog only); MINOR gets one-liner; MAJOR gets full notice + DM. ~5 min when ready.
 - [ ] **Stage 4 — migration notes on MAJOR only.** No work until first MAJOR release.
 

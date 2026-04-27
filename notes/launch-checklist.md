@@ -81,6 +81,25 @@ Origin: carved out of the 2026-04-22 gap audit + README draft session.
 - [x] **Stage 1 — seed Changelog canvas** (`F0AVAB5Q4KY`, 2026-04-26). Format `YYYY-MM-DD — [Component] [Version] — [Title] (SEMVER)`. Seeded with two real entries (CLAUDE.md v2.1 PATCH, Control Tower v1.4 MINOR). Linked from seed Overview canvas. Single source of truth — no parallel records.
 - [x] **Stage 2 — "What's New in seed" My Tasks emit** (CLAUDE.md v2.2, commit `6105809`, 2026-04-26). Three additions: new "Read the seed Changelog" parsing section, new "Output format — What's New in seed" rendering section, write order updated (item #1, hidden if empty). Italic scope-clarifying subhead distinguishes from "What Changed Since Last Run." Payload cost ~5–10 lines per run when entries exist; offset by compact-quiet-project skill in same-day release.
 
+## v2.5 release — compact-by-default skill, v2.4 rollback (2026-04-27, Task 61)
+
+**Two CLAUDE.md commits today addressing the Routine stream idle timeout (Task 61):**
+
+- **v2.4** (commit `d87fc43`) — two-phase write protocol. Splitting writeback across two turns to isolate the write into a fresh stream. Live test 2026-04-27: model improvised around the spec ("output token limit prevents emitting the full block"), went directly to write, hit same timeout. **Diagnosis was wrong** — stream idle is during content generation, not between reads and writes. Rolled back same day.
+- **v2.5** (commit `2e9a541`) — actual fix path. Replaces `compact-quiet-project` with broader `compact-by-default` skill. New rule: default all projects to one-line summaries; promote to FULL Active Projects section only when there's active signal (red flag anywhere in content, Waiting On You item, OR session within 2 days). Old skill marked deprecated in place. New "Project Summary (N)" section replaces "Quiet Projects (N)".
+
+**Audit at v2.5 release** (Josh's 14-project My Tasks):
+- FULL: 4 (Panel BOM, JobyWorks/UNS, 527 Post Cure, Pickle Autoclave) — all red-flag triggered
+- COMPACT: 10
+- Estimated ~60-66% payload reduction in Active Projects body (~125 → ~42 lines)
+
+**Caveat:** "Waiting On You" criterion is currently a no-op in Josh's canvas (no such section exists, just a counter). Kept in rule for forward-compat with other collaborators. If next manual Routine re-run still fails, suspicion falls on canvas reads themselves taking too long, not generation length.
+
+**Process notes from this iteration:**
+- Project Chat diagnosed v2.4 path; live test rejected it. Worth reinforcing: live signals beat speculative diagnosis every time.
+- Two-skill state (deprecated old + active new) is a deliberate transition pattern; old skill removed after one stable release cycle to avoid orphaning anything mid-rebrand.
+- The "raise mismatches up" feedback rule fired again — Agent C surfaced the Waiting-On-You no-op caveat, which I would have missed.
+
 ## compact-quiet-project skill (CLAUDE.md v2.3, MINOR, 2026-04-26)
 
 **First Claude Code Skill in the framework.** Lives at `.claude/skills/compact-quiet-project/SKILL.md`. Reduces briefing payload by collapsing quiet projects into one-line summaries grouped under a "Quiet Projects (N)" section.

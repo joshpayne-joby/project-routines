@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.3
+# CLAUDE.md — project-routines v2.4
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -269,14 +269,41 @@ This table tells the Routine which projects to check. Add a row for each project
 
 # Writing back
 
-Always full replace of the entire canvas. Never targeted section update.
+Canvas writeback uses a **two-phase protocol** to avoid stream idle timeouts on long Routine runs: reads and content assembly happen in turn 1; the canvas write happens at the start of a fresh turn 2. This pattern stays durable as project counts scale beyond 14.
 
-**Canvas Write Rule — Full replace only, no exceptions.**
+## Phase 1 — Reads and content assembly (turn 1)
+
+After completing all reads (My Tasks, seed Changelog, every project canvas, all output-format processing including the `compact-quiet-project` skill), assemble the complete My Tasks canvas content in memory per the **Write order** below.
+
+Output the assembled content as plain text wrapped in unambiguous markers — each marker must appear on its own line at the start and end of the content block:
+
+```
+READY_TO_WRITE
+[full My Tasks canvas content here, exactly as it should land in the canvas]
+END_READY_TO_WRITE
+```
+
+The marker block is the sole output of this turn. **Do NOT call `slack_update_canvas` in this turn.** Do not call any other tools after assembling the marker block. End the turn after the closing `END_READY_TO_WRITE` marker.
+
+## Phase 2 — Canvas write (turn 2)
+
+When a turn begins and a `READY_TO_WRITE ... END_READY_TO_WRITE` block is visible in the prior turn's output, this is phase 2. As your **first action** of this turn:
+
+1. Extract the content strictly between the `READY_TO_WRITE` and `END_READY_TO_WRITE` marker lines. Do NOT include the marker lines themselves in the canvas content.
+2. Call `slack_update_canvas` with: `canvas_id` = the My Tasks canvas ID from bootstrap, `action` = `replace`, no `section_id`, `content` = the extracted content.
+3. **Do NOT re-read any canvases.** Phase 2 works strictly from the prior turn's handoff block.
+4. After the write completes, log the one-line summary per the **End of run** section and end the run.
+
+## Canvas Write Rule — Full replace only, no exceptions.
+
 All canvas writes must use action=replace without a section_id. Never use section-level replace on any canvas section, especially tables. The Slack Canvas API has a confirmed bug: replacing a table section creates a ghost duplicate empty table that cannot be removed via the API — the only fix is a full canvas rewrite. Pattern: read the full canvas → hold content in memory → make all changes → write the entire canvas back in a single call.
 
 For the full set of canvas write rules used by the seed provisioner (title-vs-body-h1 duplication, h1-change ghost asymmetry, @mention format read↔write translation, etc.), see `PROJECT_SETUP.md` § Canvas Write Rules. The full-replace rule above is the load-bearing one for Routine writes; the rest cover provisioner-time edge cases the Routine doesn't usually hit.
 
-Write order:
+## Write order
+
+The phase-1 assembly emits canvas content in this order:
+
 1. What's New in seed (if entries since last run; otherwise omit entirely)
 2. Scorecard summary table
 3. What Changed Since Last Run
@@ -335,6 +362,11 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.4 — 2026-04-27 — Task 61
+# - Two-phase write protocol added to "Writing back" section: phase 1 assembles canvas content + emits READY_TO_WRITE marker block in turn 1; phase 2 writes the canvas in a fresh turn 2 from the prior turn's handoff
+# - Fixes the stream idle timeout failing scheduled Routine runs since 2026-04-22. Diagnosis: connection idles during long agent loops between sequential reads and the writeback tool call. Splitting turns isolates the write into a fresh stream regardless of read volume.
+# - Constraints: phase 1 must NOT call slack_update_canvas; phase 2 must NOT re-read canvases — it works strictly from the prior turn's marker block
+# - Durable pattern as project counts scale beyond 14
 # v2.3 — 2026-04-26
 # - Added compact-quiet-project skill at .claude/skills/compact-quiet-project/SKILL.md — collapses projects with no recent activity, no red flags, no waiting-on-you items into one-line summaries
 # - Quiet projects group under a single "Quiet Projects (N)" section placed after Active Projects, before Project Registry; omitted entirely if zero qualify

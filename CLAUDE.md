@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.5
+# CLAUDE.md — project-routines v2.6
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -139,9 +139,56 @@ For each project:
    - Read session log entries since last run
    - If new entries exist: someone worked on this project — record who and what changed
 
+6. **Set the activity flag** — per the Activity-based compose section below, mark this project as `active` or `inactive` for this run.
+
+# Activity-based compose
+
+To stay within Anthropic's stream idle timeout window, the Routine regenerates only the project sections that have changed since the last run. Inactive sections are copied verbatim from the existing My Tasks canvas. This drops generation work from "all N projects" to "the 2-3 with activity today," which keeps the compose step inside the timeout budget. Pattern stays durable as project counts scale.
+
+## Capture prior canvas state at run start
+
+When you read the My Tasks canvas at the start of the run (per "How to find the canvas"), preserve TWO things in memory before iterating projects:
+
+1. **`last_run_date`** — extract the `YYYY-MM-DD` prefix from the canvas's `Last updated: ...` line at the top. If the line is missing or unparseable, treat as `0000-00-00` (first-run behavior — every project is active).
+
+2. **`existing_sections`** — a map from **Project ID** to the verbatim section content from the canvas. Walk the canvas markdown and key by the **project ID anchor** embedded in each section header as an HTML comment (e.g. `<!-- AES-CIRSAW -->`):
+   - Active Projects sections begin with `### [Display Name](hub_url) <!-- PROJECT_ID -->`. Extract `PROJECT_ID` from the anchor; capture the full block (header + body) until the next `### ` header or the next `## ` divider.
+   - Project Summary entries (compact one-liners under `## Project Summary (N)`) carry the same anchor at end of line: `- **[Display Name](url)** — last session YYYY-MM-DD, <status> <!-- PROJECT_ID -->`. Key by anchor.
+   - **Fallback for legacy canvases** — if a section header lacks the anchor (canvas predates v2.6), match by Display Name against the Routine Config row's Display Name as a one-time bridge. After the next write completes, every section will have its anchor and the fallback won't fire again.
+   - Result: every project that has rendered content in the existing canvas has an entry in `existing_sections`, keyed deterministically by stable Project ID rather than drift-prone Display Name.
+
+## Activity check per project
+
+For each project in Routine Config, evaluate AFTER its per-project reads complete (Claude Canvas, channel, Human Canvas). A project has **activity since last run** if ANY of:
+
+- New session log entry in the Claude Canvas with a date later than `last_run_date`
+- One or more new project channel messages with timestamp later than `last_run_date` (focus on human posts; ignore bot/automation noise)
+- A new Waiting On You item pointing at this project (compared to the existing canvas's Waiting On You section)
+- The project is **not** in `existing_sections` — treat as active (new project, first render = a generation)
+
+Otherwise the project is **inactive**.
+
+## Compose strategy
+
+When composing the Active Projects + Project Summary regions of the new canvas:
+
+- **Active project** → fully regenerate the section per the Output format rules below. Apply the `compact-by-default` skill (FULL or COMPACT decision tree). Place in the destination it lands in (Active Projects or Project Summary).
+- **Inactive project** → copy its entry from `existing_sections` verbatim into the same destination. No regeneration. Whatever rendering state the project was in last run carries forward.
+- **New project (not in `existing_sections`)** → render fresh as if active.
+
+The fixed-format sections (scorecard, What Changed Since Last Run, Waiting On You, Project Registry, Routine Config, footer, What's New in seed) are always regenerated — they're aggregations across projects and need fresh state.
+
+## Format-change escape hatch
+
+If a CLAUDE.md release changes the rendering format (new column, restructured table, new prose pattern), inactive sections will display the old format until those projects become active. This is an acceptable transient — most projects rotate through activity within a few weeks. To force a full regenerate run, the owner can manually note `_full refresh next run_` anywhere in My Tasks before the next Routine fires; the Routine should detect that string and treat all projects as active.
+
+If parsing the existing canvas section for a project fails (header malformed, content broken), treat the project as active and regenerate. Don't propagate broken state.
+
 # Output format — Active Projects sections
 
-Apply the `compact-by-default` skill at `.claude/skills/compact-by-default/SKILL.md` to determine FULL vs COMPACT rendering on each project independently.
+This section's rules apply ONLY to projects flagged `active` for this run by the Activity-based compose check above. Inactive projects skip this entirely — their existing section is copied verbatim.
+
+Apply the `compact-by-default` skill at `.claude/skills/compact-by-default/SKILL.md` to determine FULL vs COMPACT rendering on each active project independently.
 
 **Default is COMPACT.** A project renders FULL only when at least one is true:
 - Any `:red_circle:` symbol appears anywhere in the project's content (red task row, callout in the section header, or attention flag)
@@ -153,7 +200,7 @@ If none of those is true, the project renders as a single line under a "Project 
 The format below applies only to projects that promote to FULL.
 
 ```
-### [Project Display Name](hub_canvas_url)
+### [Project Display Name](hub_canvas_url) <!-- PROJECT_ID -->
 
 Last session: [date] — [who] | [Claude Project](claude_project_url) | ![](#channel_id) | [Field Reference](human_canvas_url)
 
@@ -342,6 +389,14 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.6 — 2026-04-27 — Task 61 (third attempt)
+# - Activity-based compose: Routine regenerates only project sections with activity since last_run_date; inactive sections are copied verbatim from the existing My Tasks canvas.
+# - Diagnosis (sister Project Chat, after v2.5 still failed): root cause is generation latency, not payload size or read volume. Even ~42-line briefings (post v2.5 trim) take long enough to compose that the stream idles out. Cannot shrink the timeout window — Anthropic infra. Cannot do incremental section writes — Slack canvas section-write API duplicates instead of replacing.
+# - Strategy: capture last_run_date + existing_sections map at run start; activity check per project (new session log / new channel messages / new Waiting On You item / new project = active); active = regenerate, inactive = verbatim copy from prior canvas.
+# - Typical day: 2-3 active out of N projects. Generation work drops ~80%. Scales — at 40+ projects, most are still quiet on any given day.
+# - Project ID anchors embedded in every section header as HTML comments (`### [Display Name](hub_url) <!-- AES-CIRSAW -->`) make existing_sections lookup deterministic. Display names can drift; Project IDs are immutable. Compact lines under Project Summary carry the same anchor at end of line. Legacy canvases (predating v2.6) fall back to Display Name matching for one bridge run; subsequent writes embed anchors everywhere.
+# - Format-change escape hatch: owner notes `_full refresh next run_` in My Tasks to force regenerate-all on next fire.
+# - compact-by-default skill still applies to active projects; only changes which projects skip compaction entirely (inactive = no compaction logic, just copy).
 # v2.5 — 2026-04-27 — Task 61 (rolled forward)
 # - SUPERSEDES v2.4 — two-phase write protocol rolled back. Diagnosis was wrong: stream idle timeout fires during canvas content generation (model pauses mid-stream while emitting long content), not during idle between reads and the write call. Splitting turns didn't isolate the failure mode.
 # - Live test 2026-04-27: model improvised around v2.4 spec ("output token limit prevents emitting the full block"), went directly to write, hit same Stream idle timeout. Real cause is generation length.

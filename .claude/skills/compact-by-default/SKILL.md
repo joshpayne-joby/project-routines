@@ -24,8 +24,10 @@ All three checks read state already loaded by the Routine — no extra fetches.
 ## Compact line format
 
 ```
-- **[Display Name](hub_canvas_url)** — last session YYYY-MM-DD, <status>
+- **[Display Name](hub_canvas_url)** — last session YYYY-MM-DD, <status> <!-- PROJECT_ID -->
 ```
+
+Where `PROJECT_ID` is the immutable Project ID from the Routine Config row for this project (e.g. `AES-CIRSAW`, `AMFG-TEMPER`, `TFAB-IRIS`). The HTML comment is a parser anchor — it's invisible in Slack canvas rendering but lets the next run's Activity-based compose look up this project's prior section deterministically, even if the Display Name has drifted. See CLAUDE.md § Activity-based compose for the full rationale.
 
 Status word, picked deterministically from session age:
 
@@ -47,9 +49,9 @@ Compact entries collect under a single section:
 ```
 ## Project Summary (N)
 
-- **[Project A](url)** — last session 2026-04-20, active
-- **[Project B](url)** — last session 2026-04-09, dormant
-- **[Project C](url)** — last session 2026-04-16, quiet
+- **[Project A](url)** — last session 2026-04-20, active <!-- AES-CIRSAW -->
+- **[Project B](url)** — last session 2026-04-09, dormant <!-- AES-PICKLE -->
+- **[Project C](url)** — last session 2026-04-16, quiet <!-- AMFG-TEMPER -->
 ```
 
 Where `(N)` is the count of compacted projects.

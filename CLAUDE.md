@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.4
+# CLAUDE.md — project-routines v2.5
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -141,9 +141,16 @@ For each project:
 
 # Output format — Active Projects sections
 
-Each project gets a section in the Active Projects area. Format:
+Apply the `compact-by-default` skill at `.claude/skills/compact-by-default/SKILL.md` to determine FULL vs COMPACT rendering on each project independently.
 
-**Quiet Projects exception.** For any project meeting all three compact criteria (stale 7+ days, no red flags, not in Waiting On You), use the `compact-quiet-project` skill at `.claude/skills/compact-quiet-project/SKILL.md` instead of rendering a full section. Compacted entries collect under a single "Quiet Projects (N)" section after the last Active Projects section, before Project Registry. See the skill for the exact format and promote-back rules.
+**Default is COMPACT.** A project renders FULL only when at least one is true:
+- Any `:red_circle:` symbol appears anywhere in the project's content (red task row, callout in the section header, or attention flag)
+- The project appears in the My Tasks "Waiting On You" section
+- The project's last session date is within the last 2 days
+
+If none of those is true, the project renders as a single line under a "Project Summary (N)" section placed after the last full Active Projects section and before Project Registry. See the skill for compact line format, status word taxonomy, edge cases, and promote-back rules.
+
+The format below applies only to projects that promote to FULL.
 
 ```
 ### [Project Display Name](hub_canvas_url)
@@ -269,47 +276,20 @@ This table tells the Routine which projects to check. Add a row for each project
 
 # Writing back
 
-Canvas writeback uses a **two-phase protocol** to avoid stream idle timeouts on long Routine runs: reads and content assembly happen in turn 1; the canvas write happens at the start of a fresh turn 2. This pattern stays durable as project counts scale beyond 14.
+Always full replace of the entire canvas. Never targeted section update.
 
-## Phase 1 — Reads and content assembly (turn 1)
-
-After completing all reads (My Tasks, seed Changelog, every project canvas, all output-format processing including the `compact-quiet-project` skill), assemble the complete My Tasks canvas content in memory per the **Write order** below.
-
-Output the assembled content as plain text wrapped in unambiguous markers — each marker must appear on its own line at the start and end of the content block:
-
-```
-READY_TO_WRITE
-[full My Tasks canvas content here, exactly as it should land in the canvas]
-END_READY_TO_WRITE
-```
-
-The marker block is the sole output of this turn. **Do NOT call `slack_update_canvas` in this turn.** Do not call any other tools after assembling the marker block. End the turn after the closing `END_READY_TO_WRITE` marker.
-
-## Phase 2 — Canvas write (turn 2)
-
-When a turn begins and a `READY_TO_WRITE ... END_READY_TO_WRITE` block is visible in the prior turn's output, this is phase 2. As your **first action** of this turn:
-
-1. Extract the content strictly between the `READY_TO_WRITE` and `END_READY_TO_WRITE` marker lines. Do NOT include the marker lines themselves in the canvas content.
-2. Call `slack_update_canvas` with: `canvas_id` = the My Tasks canvas ID from bootstrap, `action` = `replace`, no `section_id`, `content` = the extracted content.
-3. **Do NOT re-read any canvases.** Phase 2 works strictly from the prior turn's handoff block.
-4. After the write completes, log the one-line summary per the **End of run** section and end the run.
-
-## Canvas Write Rule — Full replace only, no exceptions.
-
+**Canvas Write Rule — Full replace only, no exceptions.**
 All canvas writes must use action=replace without a section_id. Never use section-level replace on any canvas section, especially tables. The Slack Canvas API has a confirmed bug: replacing a table section creates a ghost duplicate empty table that cannot be removed via the API — the only fix is a full canvas rewrite. Pattern: read the full canvas → hold content in memory → make all changes → write the entire canvas back in a single call.
 
 For the full set of canvas write rules used by the seed provisioner (title-vs-body-h1 duplication, h1-change ghost asymmetry, @mention format read↔write translation, etc.), see `PROJECT_SETUP.md` § Canvas Write Rules. The full-replace rule above is the load-bearing one for Routine writes; the rest cover provisioner-time edge cases the Routine doesn't usually hit.
 
-## Write order
-
-The phase-1 assembly emits canvas content in this order:
-
+Write order:
 1. What's New in seed (if entries since last run; otherwise omit entirely)
 2. Scorecard summary table
 3. What Changed Since Last Run
 4. Waiting On You (if any items)
-5. Active Projects sections (one per project — full format)
-6. Quiet Projects section (compacted entries grouped under single header; omit entirely if zero qualify)
+5. Active Projects sections (one per project — only when promoted to FULL per `compact-by-default` skill rules; if zero projects promote, emit the "Active Projects" header with a one-line `_No projects with active signal._` placeholder)
+6. Project Summary section (compact one-liners for projects without active signal; omit entirely if zero qualify)
 7. Project Registry (human navigation table)
 8. Routine Config (machine ID table)
 9. Footer note about the Routine
@@ -362,11 +342,17 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
-# v2.4 — 2026-04-27 — Task 61
-# - Two-phase write protocol added to "Writing back" section: phase 1 assembles canvas content + emits READY_TO_WRITE marker block in turn 1; phase 2 writes the canvas in a fresh turn 2 from the prior turn's handoff
-# - Fixes the stream idle timeout failing scheduled Routine runs since 2026-04-22. Diagnosis: connection idles during long agent loops between sequential reads and the writeback tool call. Splitting turns isolates the write into a fresh stream regardless of read volume.
-# - Constraints: phase 1 must NOT call slack_update_canvas; phase 2 must NOT re-read canvases — it works strictly from the prior turn's marker block
-# - Durable pattern as project counts scale beyond 14
+# v2.5 — 2026-04-27 — Task 61 (rolled forward)
+# - SUPERSEDES v2.4 — two-phase write protocol rolled back. Diagnosis was wrong: stream idle timeout fires during canvas content generation (model pauses mid-stream while emitting long content), not during idle between reads and the write call. Splitting turns didn't isolate the failure mode.
+# - Live test 2026-04-27: model improvised around v2.4 spec ("output token limit prevents emitting the full block"), went directly to write, hit same Stream idle timeout. Real cause is generation length.
+# - Restored v2.3 "Writing back" section: single-phase, no marker block, original Canvas Write Rule + Write order.
+# - Replaced compact-quiet-project skill with compact-by-default skill at .claude/skills/compact-by-default/SKILL.md. New rule defaults all projects to one-line summary; promotes to FULL Active Projects section only on red flag (anywhere in project content), Waiting On You item, OR session within 2 days.
+# - Old compact-quiet-project skill marked deprecated in place; will be removed once next release stabilizes.
+# - "Quiet Projects (N)" section renamed to "Project Summary (N)" — compaction is now the default, not the exception.
+# - Audit at release (Josh's 14-project My Tasks): 4 FULL (Panel BOM, JobyWorks/UNS, 527 Post Cure, Pickle Autoclave — all red-flag triggered), 10 COMPACT. Estimated payload reduction ~60-66% in Active Projects region.
+# - Caveat: "Waiting On You" criterion is currently a no-op in Josh's canvas (no such section exists, just a header counter). Kept in the rule for forward-compat with other collaborators.
+# v2.4 — 2026-04-27 — Task 61 (ROLLED BACK in v2.5)
+# - [Two-phase write protocol — rolled back. Diagnosis was wrong; see v2.5.]
 # v2.3 — 2026-04-26
 # - Added compact-quiet-project skill at .claude/skills/compact-quiet-project/SKILL.md — collapses projects with no recent activity, no red flags, no waiting-on-you items into one-line summaries
 # - Quiet projects group under a single "Quiet Projects (N)" section placed after Active Projects, before Project Registry; omitted entirely if zero qualify

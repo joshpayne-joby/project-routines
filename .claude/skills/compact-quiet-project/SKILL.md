@@ -1,10 +1,18 @@
 ---
 name: compact-quiet-project
-description: Render a project with no recent session activity, no red flags, and no items waiting on the owner as a one-line summary instead of a full Active Projects section. Reduces seed Routine briefing payload size when many projects are stale.
-when_to_use: Use during the daily seed Routine briefing emit. Apply per-project after reading Routine Config — if all three quietness criteria pass, replace the full Active Projects section with a single bullet line and group all such bullets under a "Quiet Projects (N)" section after Active Projects.
+description: "DEPRECATED 2026-04-27 — superseded by compact-by-default. Original behavior: render a project with no recent session activity, no red flags, and no items waiting on the owner as a one-line summary. The new compact-by-default skill is the active rule and applies broader compaction. Will be removed after one stable release cycle."
+when_to_use: "Do not use. See compact-by-default at .claude/skills/compact-by-default/SKILL.md for the active default-compact behavior."
 ---
 
-# Compact Quiet Project
+# DEPRECATED — see `compact-by-default`
+
+**This skill is deprecated as of 2026-04-27 and will be removed after one stable release cycle.** The active rule for compact rendering is now [`compact-by-default`](../compact-by-default/SKILL.md), which applies broader compaction (defaults all projects to compact, promotes to full only on red flag / Waiting On You / recent session).
+
+The original behavior (below) only compacted stale-and-quiet projects, which was insufficient to clear the seed Routine's Stream idle timeout. Kept here as historical reference until removal.
+
+---
+
+# Compact Quiet Project (deprecated original spec)
 
 When briefing a person's Active Projects, most projects in a healthy week have no movement — last session was 7+ days ago, no blockers turned red, nothing is waiting on the owner. Rendering each with a full task table costs ~6-10 lines per project for zero new signal. This skill replaces those full sections with one line each and groups them under a single "Quiet Projects (N)" header.
 

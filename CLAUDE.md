@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.6
+# CLAUDE.md — project-routines v2.7
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -52,10 +52,13 @@ Your output target is the person's "My Tasks" canvas. The canvas ID is in the **
 The person's "My Tasks" canvas title follows the pattern: `[Name] | My Tasks`
 
 At the start of every run:
-1. Read the person's "My Tasks" canvas
-2. Find the **Routine Config** table — this is the machine-readable table at the bottom
-3. Find the **Project Registry** table — this is the human-readable navigation table
-4. The Routine Config table has the IDs you need: Project ID, Claude Canvas ID, Hub Canvas ID, Human Canvas ID, Channel ID, and optional Claude Project URL
+
+1. **Read the My Tasks canvas exactly ONCE.** Preserve the full `markdown_content` from this read in memory as `existing_canvas_content`. This single read is the canonical reference for the entire run — Routine Config parsing, last_run_date extraction, existing_sections lookup, and the verbatim copy of inactive project sections all consume `existing_canvas_content` from memory.
+2. **Hard rule — do NOT re-read the My Tasks canvas anywhere else in the run.** A second `slack_read_canvas` call on the My Tasks canvas adds enough latency to push the Routine over the stream idle timeout window. If at any point you find yourself thinking "let me re-read to get section X" or "let me refresh the canvas state," stop — that data is already in `existing_canvas_content`. Re-reading is the bug pattern that's been failing this Routine for a week.
+3. From `existing_canvas_content`, find the **Routine Config** table — the machine-readable table at the bottom.
+4. From `existing_canvas_content`, find the **Project Registry** table — the human-readable navigation table.
+5. The Routine Config table has the IDs you need: Project ID, Claude Canvas ID, Hub Canvas ID, Human Canvas ID, Channel ID, and optional Claude Project URL.
+6. From `existing_canvas_content`, also extract `last_run_date` and build the `existing_sections` map per the **Activity-based compose** section below — both come from the same single read.
 
 # The two registry tables
 
@@ -147,11 +150,13 @@ To stay within Anthropic's stream idle timeout window, the Routine regenerates o
 
 ## Capture prior canvas state at run start
 
-When you read the My Tasks canvas at the start of the run (per "How to find the canvas"), preserve TWO things in memory before iterating projects:
+The My Tasks canvas is read exactly ONCE per run, at run start (per "How to find the canvas" step 1), into `existing_canvas_content`. **Do not re-read the canvas to get verbatim sections, last_run_date, or anything else — every piece of prior canvas state derives from `existing_canvas_content` in memory.** Re-reading was the bug pattern that failed Routine runs through v2.6 even though the activity-based compose logic was correct.
+
+From the in-memory `existing_canvas_content`, extract TWO additional things before iterating projects:
 
 1. **`last_run_date`** — extract the `YYYY-MM-DD` prefix from the canvas's `Last updated: ...` line at the top. If the line is missing or unparseable, treat as `0000-00-00` (first-run behavior — every project is active).
 
-2. **`existing_sections`** — a map from **Project ID** to the verbatim section content from the canvas. Walk the canvas markdown and key by the **project ID anchor** embedded in each section header as an HTML comment (e.g. `<!-- AES-CIRSAW -->`):
+2. **`existing_sections`** — a map from **Project ID** to the verbatim section content from the canvas. Walk the in-memory `existing_canvas_content` and key by the **project ID anchor** embedded in each section header as an HTML comment (e.g. `<!-- AES-CIRSAW -->`):
    - Active Projects sections begin with `### [Display Name](hub_url) <!-- PROJECT_ID -->`. Extract `PROJECT_ID` from the anchor; capture the full block (header + body) until the next `### ` header or the next `## ` divider.
    - Project Summary entries (compact one-liners under `## Project Summary (N)`) carry the same anchor at end of line: `- **[Display Name](url)** — last session YYYY-MM-DD, <status> <!-- PROJECT_ID -->`. Key by anchor.
    - **Fallback for legacy canvases** — if a section header lacks the anchor (canvas predates v2.6), match by Display Name against the Routine Config row's Display Name as a one-time bridge. After the next write completes, every section will have its anchor and the fallback won't fire again.
@@ -389,6 +394,11 @@ After writing the canvas, log a one-line summary:
 ---
 
 # Changelog
+# v2.7 — 2026-04-27 — Task 61 (fourth attempt — eliminate redundant canvas read)
+# - v2.6 activity-based compose logic was correct but the spec wasn't airtight enough about read-once: live test 2026-04-27 showed the model reading the My Tasks canvas TWICE per run ("Re-reading My Tasks canvas to get the Routine Config data and existing verbatim sections before composing") and that second read pushed total stream duration over the timeout window.
+# - v2.7 makes the read-once rule explicit and load-bearing: "Read the My Tasks canvas exactly ONCE. Preserve markdown_content as existing_canvas_content. Hard rule — do NOT re-read the canvas anywhere else in the run." All downstream consumers (Routine Config parsing, last_run_date, existing_sections, verbatim copy) work strictly from the in-memory existing_canvas_content.
+# - This is the one-line fix the spec needed: the v2.6 mechanism (activity-based compose + Project ID anchors + verbatim copy of inactive sections) all stays. We're just preventing the redundant slack_read_canvas call that was costing us the timeout budget.
+# - "How to find the canvas" rewritten with the explicit read-once rule and a sharp warning ("If you find yourself thinking 'let me re-read,' stop — that data is already in existing_canvas_content. Re-reading is the bug pattern that's been failing this Routine for a week.").
 # v2.6 — 2026-04-27 — Task 61 (third attempt)
 # - Activity-based compose: Routine regenerates only project sections with activity since last_run_date; inactive sections are copied verbatim from the existing My Tasks canvas.
 # - Diagnosis (sister Project Chat, after v2.5 still failed): root cause is generation latency, not payload size or read volume. Even ~42-line briefings (post v2.5 trim) take long enough to compose that the stream idles out. Cannot shrink the timeout window — Anthropic infra. Cannot do incremental section writes — Slack canvas section-write API duplicates instead of replacing.

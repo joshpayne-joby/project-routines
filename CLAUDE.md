@@ -1,4 +1,4 @@
-# CLAUDE.md — project-routines v2.7
+# CLAUDE.md — project-routines v2.8
 # This file is read by every seed Routine at the start of each run.
 # Update this file → every collaborator's Routine inherits the update on the next run.
 # Maintained by Josh Payne | Joby Aviation Advanced Manufacturing
@@ -46,6 +46,64 @@ If Slack connects but individual canvas reads fail, log the failure and continue
 # Your canvas
 
 Your output target is the person's "My Tasks" canvas. The canvas ID is in the **Routine Config** table at the bottom of the canvas itself.
+
+# Two-Routine architecture
+
+The seed framework runs as **two scheduled Routines** rather than one, to keep each Routine's work small enough to fit inside Anthropic's stream idle timeout window.
+
+## PREP Routine — runs first (e.g. 6:00 AM PT)
+
+Reads project canvases, classifies each project's activity since `last_run_date`, writes a structured manifest to the **manifest canvas**. Does NOT write to My Tasks. Does NOT compose the briefing. Each PREP emit is small (~1.5K tokens to the manifest).
+
+## COMPOSE Routine — runs second (e.g. 6:38 AM PT)
+
+Reads the manifest, reads My Tasks (for `existing_sections` and `last_run_date`), reads the seed Changelog, regenerates only the active project sections (project canvas reads happen here for active projects only), copies inactive sections verbatim, composes the full My Tasks canvas, writes once. Reads ~6-8 canvases instead of 14+, with all classification work pre-done by PREP.
+
+## Routine mode declaration
+
+Each per-collaborator prompt MUST declare:
+
+```
+routine_mode: prep | compose
+manifest_canvas_id: F0XXXXXXXX
+```
+
+CLAUDE.md branches behavior on `routine_mode` per the **PREP flow** and **COMPOSE flow** sections below.
+
+## Coordination
+
+- PREP must finish before COMPOSE runs. Schedule PREP at least 20 minutes earlier than COMPOSE.
+- COMPOSE checks the manifest canvas's `Last updated` line at the top. If the manifest is more than 24 hours stale, COMPOSE logs a warning and falls back to direct synthesis (single-Routine behavior — same as pre-v2.8). Risky for stream idle timeout but acceptable for one-off recovery.
+- If PREP succeeds but COMPOSE fails, the manifest stays in place. COMPOSE retries on the next scheduled run.
+- If both fail, the framework is no worse than today.
+
+# PREP flow
+
+When `routine_mode: prep`, run these steps and only these:
+
+1. **Read My Tasks canvas exactly ONCE.** Preserve `markdown_content` as `existing_canvas_content`. Extract `last_run_date` per "How to find the canvas" rules below. Hard rule: do NOT re-read the canvas anywhere else in the run.
+2. **Read all 14 project Claude Canvases** in parallel, per the Routine Config rows in `existing_canvas_content`.
+3. **For each project, run the activity check** per "Activity-based compose" section below. Determine its `activity_class` (`active_full` / `active_compact` / `inactive`).
+4. **Compose a structured manifest** in the format defined in "Manifest format" section below. The manifest is the ONLY output of this run.
+5. **Write the manifest** to the `manifest_canvas_id` from your bootstrap config. Use full replace, no `section_id`.
+6. **End.** Do NOT write to My Tasks. Do NOT do any other tool calls. Log a one-line summary: `PREP complete. N active_full / N active_compact / N inactive. Manifest written.`
+
+# COMPOSE flow
+
+When `routine_mode: compose`, run these steps and only these:
+
+1. **Read the manifest canvas** at `manifest_canvas_id`. If the `Last updated` line is more than 24 hours old, log a warning, fall back to single-Routine behavior (treat as `routine_mode: prep+compose` and do the full read+classify+compose path). Otherwise continue.
+2. **Read My Tasks canvas exactly ONCE.** Preserve `markdown_content` as `existing_canvas_content`. Extract `last_run_date` and build `existing_sections` per "Activity-based compose" rules below. Hard rule: do NOT re-read.
+3. **Read the seed Changelog canvas** for the "What's New in seed" emit.
+4. **For each project in the manifest:**
+   - If `activity_class: active_full` → read the project's Claude Canvas, regenerate the section per Output format rules and the `compact-by-default` skill (FULL render).
+   - If `activity_class: active_compact` → read the project's Claude Canvas (still need it for the compact line's `last_session_date`), apply `compact-by-default` skill (COMPACT render).
+   - If `activity_class: inactive` → copy the project's section verbatim from `existing_sections`. NO project canvas read. NO regeneration.
+5. **Compose the full My Tasks canvas** per Write order in "Writing back" section below.
+6. **Write to My Tasks** (full replace, no `section_id`). This is the only canvas write of this run.
+7. **End.** Log a one-line summary per "End of run" section.
+
+The COMPOSE Routine reads only ~3 canvases (manifest + My Tasks + Changelog) plus the active subset (~2-4 projects on a typical day). Total read count drops from 14+ to ~6-8.
 
 # How to find the canvas
 
@@ -386,14 +444,74 @@ Surface urgent items with :red_circle: prefix:
 - Quotes or orders with expiration dates
 - Items explicitly flagged as urgent in the Claude Canvas
 
+# Manifest format
+
+The manifest canvas holds structured per-project data that PREP writes and COMPOSE reads. Format:
+
+```
+# seed Routine Manifest
+
+Last updated: YYYY-MM-DD HH:MM PT
+Last run date: YYYY-MM-DD
+
+## Per-project classification
+
+### AES-PLBSYS — Claude Project Instructions
+- last_session_date: 2026-04-27
+- channel_activity_since_last_run: yes
+- has_red_flags: no
+- waiting_on_you: no
+- activity_class: active_full
+
+### AMFG-TEMPER — Temper small inductive heater
+- last_session_date: 2026-04-17
+- channel_activity_since_last_run: no
+- has_red_flags: yes
+- waiting_on_you: no
+- activity_class: active_full
+
+### AES-CIRSAW — Automated Circular Saw
+- last_session_date: 2026-04-09
+- channel_activity_since_last_run: no
+- has_red_flags: no
+- waiting_on_you: no
+- activity_class: inactive
+```
+
+**Per-project fields:**
+- `last_session_date` — YYYY-MM-DD; the most recent session log entry's date in the project's Claude Canvas, or `unknown` if none
+- `channel_activity_since_last_run` — `yes` / `no`; whether new project channel messages have arrived since `last_run_date`
+- `has_red_flags` — `yes` / `no`; any `:red_circle:` symbol in the project's Claude Canvas (red task row, callout, or attention flag)
+- `waiting_on_you` — `yes` / `no`; whether the project appears in the My Tasks "Waiting On You" section
+- `activity_class` — one of:
+  - `active_full` — promote to full Active Projects section per `compact-by-default` skill rules (red flag OR Waiting On You OR session within 2 days)
+  - `active_compact` — render as compact one-line under Project Summary (no promotion-to-full criteria, but session activity since `last_run_date`)
+  - `inactive` — no activity since `last_run_date`; COMPOSE copies section verbatim from existing My Tasks canvas
+
+**Header anchors:** each project's `### header` includes the Project ID as its primary key. COMPOSE keys lookups on Project ID, not display name.
+
 # End of run
 
-After writing the canvas, log a one-line summary:
-> "Run complete. [N] projects read, [N] canvas fetch failures, [N] check-ins detected."
+After writing the canvas, log a one-line summary.
+
+**For PREP mode:**
+> "PREP complete. [N] active_full / [N] active_compact / [N] inactive. Manifest written to F[manifest_canvas_id]."
+
+**For COMPOSE mode:**
+> "COMPOSE complete. [N] projects read for actives, [N] sections copied verbatim, [N] check-ins detected. My Tasks written."
 
 ---
 
 # Changelog
+# v2.8 — 2026-04-27 — Task 61 (fifth attempt — Two-Routine architecture)
+# - Splits the framework into TWO scheduled Routines coordinated via a manifest canvas: PREP (reads + classifies, writes manifest) and COMPOSE (reads manifest + My Tasks + actives, writes My Tasks).
+# - Per-collaborator prompt declares `routine_mode: prep | compose` and `manifest_canvas_id: F0XXXXXXXX`. CLAUDE.md branches behavior on routine_mode.
+# - PREP flow: reads My Tasks once + 14 project canvases + classifies activity → writes manifest only (~1.5K tokens). No My Tasks write.
+# - COMPOSE flow: reads manifest + My Tasks + Changelog + ~2-4 active project canvases → composes My Tasks → single full-replace write. Inactive sections copied verbatim from existing_sections (no canvas read for them).
+# - Diagnosis after v2.7 still failed: even with single-read + activity-compose + compact-by-default, the COMPOSE step's internal work + single-stream emit was too long. Splitting work across two scheduled Routines gives each its own fresh stream.
+# - Open uncertainty: this fix targets total work-per-Routine, not the buffering-during-tool-call-emit. If the COMPOSE Routine's slack_update_canvas call still buffers past the timeout window, the diagnosis remains incomplete and the next path is GitHub Actions cron (Action does prep + write; Routine becomes optional) or MCP wrapper (eager_input_streaming bypass). Both surfaced by today's diagnostic agent team.
+# - Coordination: PREP scheduled ≥20 min before COMPOSE; COMPOSE checks manifest staleness and falls back to direct synthesis if >24h stale. Failure modes documented in Two-Routine architecture section.
+# - Manifest format defined: structured per-project data with activity_class enum (active_full / active_compact / inactive). COMPOSE consumes the classification rather than redoing it.
 # v2.7 — 2026-04-27 — Task 61 (fourth attempt — eliminate redundant canvas read)
 # - v2.6 activity-based compose logic was correct but the spec wasn't airtight enough about read-once: live test 2026-04-27 showed the model reading the My Tasks canvas TWICE per run ("Re-reading My Tasks canvas to get the Routine Config data and existing verbatim sections before composing") and that second read pushed total stream duration over the timeout window.
 # - v2.7 makes the read-once rule explicit and load-bearing: "Read the My Tasks canvas exactly ONCE. Preserve markdown_content as existing_canvas_content. Hard rule — do NOT re-read the canvas anywhere else in the run." All downstream consumers (Routine Config parsing, last_run_date, existing_sections, verbatim copy) work strictly from the in-memory existing_canvas_content.

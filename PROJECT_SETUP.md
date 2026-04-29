@@ -1,7 +1,7 @@
 # PROJECT_SETUP.md
 # seed Provisioner
 # Drop this file into a Claude Project as Project Instructions.
-# Version 1.11 | April 2026 | Josh Payne
+# Version 1.13 | April 2026 | Josh Payne
 
 ---
 
@@ -167,6 +167,18 @@ Using `section_id` here appends a duplicate block (ghost empty table row). Full-
 
 "All three are up. Hub registry patched. Task Board has the full seed Configuration."
 
+**Extract collaborators from Hub Team table.**
+
+Parse the Team table in the newly created Hub canvas. For each row in the Team table:
+- Extract the **Name** from the Name column
+- Extract the **Slack user ID** from the Slack column — format is `![](@USERID)` or `<@USERID>`. Strip formatting to get the raw ID (e.g. `UNDBYGY1J`). Only collect IDs matching the pattern `^U[A-Z0-9]{8,}$` — skip any placeholder text like `@[slack_id]`
+
+Build two comma-separated strings:
+- `collaborators_list` — raw Slack user IDs (e.g. `UNDBYGY1J,U07G6J8AFQ8`)
+- `collaborator_names_list` — full names (e.g. `Josh Payne, Adam Hickok`)
+
+If the Team table has no rows, or if all rows fail the ID pattern check, set both values to `—` and log: *"Could not parse collaborators from Hub Team table — both Collaborator fields set to —."* Do not block provisioning.
+
 ---
 
 ## No Channel
@@ -221,6 +233,69 @@ After canvases and files are generated, append the new project to the shared see
 4. Confirm in chat: "Registered as [DOMAIN]-[SHORTNAME] in the seed Registry."
 
 If the Registry read fails, skip silently and tell the PM: "Registered the canvases, but couldn't reach the seed Registry — add a row manually at https://jobyaviation.enterprise.slack.com/docs/T046X1H57/F0AUJ8FV6JH."
+
+---
+
+## Register in Smartsheet (Project Registry — Core)
+
+After the seed Registry write, register the project in the Smartsheet `Project Registry — Core` sheet. This sheet is the canonical project list the seed Routine reads on every run — without this row, the project will be sentinel-skipped on its next morning briefing.
+
+1. Call `add_rows` on the Smartsheet MCP (`https://mcp.smartsheet.com`) with:
+
+   **Sheet ID:** `4898009463607172`
+
+   **Cells (one row, `columnId` → `value`):**
+
+   | Column | columnId | Value |
+   |---|---|---|
+   | Project ID | `5743034995347332` | `[DOMAIN]-[SHORTNAME]` |
+   | Display Name | `3491235181662084` | The Claude Project Display Name |
+   | Domain | `7994834809032580` | Derived from the Project ID prefix (see table below) |
+   | Status | `676485414555524` | `Active` |
+   | Hub Canvas ID | `5180085041926020` | `[hub_canvas_id]` |
+   | Human Canvas ID | `2928285228240772` | `[human_canvas_id]` if a Human Canvas was created, otherwise `—` |
+   | Channel ID | `7431884855611268` | `[project_channel_id]` if provided, otherwise `none` |
+   | Added | `4054185135083396` | Today's date in ISO `YYYY-MM-DD` format |
+   | Collaborators | `3407511236677508` | `collaborators_list` from the "Extract collaborators from Hub Team table" step in Create the Canvases — comma-separated Slack user IDs |
+   | Collaborator Names | `6583842740932484` | `collaborator_names_list` from the same step — comma-separated full names, in the same order as the Collaborators column |
+
+   **Do NOT set:** Owner, Last Session, Notes — these are populated later by the Routine and project sessions.
+
+2. Domain mapping (Project ID prefix → Domain picklist value):
+
+   | Prefix | Domain |
+   |---|---|
+   | `AES-` | `AES` |
+   | `AMFG-` | `AMFG` |
+   | `TFAB-` | `TFAB` |
+   | `RSHOP-` | `RSHOP` |
+   | `PSPEC-` | `PSPEC` |
+   | `TEAM-` | `TEAM-AI` |
+
+   For prefixes not in this table, ask the PM or use the closest match — the Domain picklist is open-vocabulary and grows organically.
+
+3. On success, confirm in chat: *"Project registered in seed Registry, My Tasks, and Smartsheet. The Routine will pick it up on next run."*
+
+If the Smartsheet write fails:
+- Log the failure clearly in chat with the error details from the API response.
+- Do NOT block or roll back the canvas registration — canvases stay.
+- Tell the PM: *"Smartsheet registration failed — add this project manually to `Project Registry — Core` (https://app.smartsheet.com/sheets/4p6P8GfhPVcf5WxjV479QQ9c7jV2rJx28qMh67m1) before the next Routine run, or the project will be sentinel-skipped."*
+
+---
+
+## Collaborator Sync — Active Session Guard
+
+During any active project session, when Claude assigns a task to a person or a new person is added to the project:
+
+1. Check the current `Collaborators` cell for this project in Smartsheet (column ID `3407511236677508`, sheet ID `4898009463607172`) — match by Project ID
+2. Parse the existing comma-separated ID list
+3. If the person's Slack user ID is NOT present, append both their ID to `Collaborators` and their name to `Collaborator Names`
+4. Write both updated values back via `update_rows` — runs as part of the normal end-of-session write-back pass, not a separate step
+5. Log in the session log: *"Added [Name] (`[USERID]`) to Collaborators in Smartsheet"*
+
+If the Smartsheet update fails, log the failure but do not block the canvas write-back. Surface it with the Project ID so the PM can patch manually.
+
+**Why this matters:** The CT's new-project detection compares the `Collaborators` field against each person's My Tasks Routine Config on session open. Keeping it current means collaborators get surfaced automatically — no DMs, no manual registration, no silent gaps.
 
 ---
 
@@ -550,7 +625,7 @@ Claude orients new collaborators automatically at their first session.
 
 ---
 
-*PROJECT_SETUP.md v1.11 | April 2026 | Josh Payne*
+*PROJECT_SETUP.md v1.13 | April 2026 | Josh Payne*
 *Provisioner for PROJECT_INSTRUCTIONS.md v3.8+ (now delivered via Prime Project canvas)*
 *Changelog v1.1: emoji status codes, full-replace registry write, mixed ecosystem, no-channel nudge, sharing gate removed*
 *Changelog v1.2: sharing step removed entirely, PROJECT_INSTRUCTIONS.md delivered as Slack canvas pointer not generated artifact*
@@ -563,3 +638,5 @@ Claude orients new collaborators automatically at their first session.
 *Changelog v1.9: Close step 2 swapped from "fat-paste the Prime canvas body into Project Instructions" → "paste the `docs/PROJECT_INSTRUCTIONS_WRAPPER.md` template with five filled values." Behavior updates now ripple through every project automatically via the wrapper instead of requiring every project to re-paste a drifted Prime canvas. Resolves an architecture inconsistency: the wrapper (v1.1) had already replaced fat-paste as the canonical model, but this provisioner's close step had not been updated to match. Companion to BOOTSTRAP.md v0.1.*
 *Changelog v1.10: new top-level "Canvas Write Rules" section mirrors Prime/Control Tower's write-back rules — creates use `slack_create_canvas` with full content, post-creation edits use `slack_update_canvas` with `action=replace` and no `section_id`. New explicit "Hub patch — backfill the Claude Canvas ID" step at the end of Create the Canvases: after Claude Canvas creation, patch the Hub's `Claude Canvas:` placeholder via full-canvas replace. Closes a spec gap surfaced by the v1.9 smoke test on AMFG-SEEDTEST — the provisioner correctly created canvases in order but improvised section-replace for the Hub patch, triggering Slack's section-replace-appends-duplicate bug and leaving a ghost empty table row. Full-canvas replace is now spelled out as the only supported patch pattern, no exceptions.*
 *Changelog v1.11: Canvas Write Rules grow two new rules surfaced by 2026-04-24 canvas work. Rule 5: on create, the title goes only in the `title` parameter — never duplicate it as a body h1, since Slack renders title slot + body h1 independently and produces a 2× duplicate (observed creating Adam's onboarding canvas; generalizes the warning already in COLLABORATOR_SETUP). Rule 6: full-canvas replace ghosts a *changed* h1 but cleans cleanly on a *removed* h1 — observed renaming the seed Registry (h1 ghosted, required Slack UI cleanup) versus removing the duplicate h1 from Adam's onboarding canvas (cleaned cleanly). Future-proofing — the provisioner's current flows don't change existing-canvas h1s, but the rules belong here so anyone debugging a canvas write knows the failure modes.*
+*Changelog v1.12: new "Register in Smartsheet (Project Registry — Core)" step inserted after the seed Registry write — provisioner now writes a row to sheet `4898009463607172` (Project ID, Display Name, Domain, Status, Hub Canvas ID, Human Canvas ID, Channel ID, Added; Status defaults to `Active`; Owner / Last Session / Notes left for the Routine to populate). Domain is derived from the Project ID prefix via an explicit mapping table. Smartsheet write failures don't block canvas registration — fallback message points the PM at the manual sheet URL. Final confirmation message updated to "Project registered in seed Registry, My Tasks, and Smartsheet. The Routine will pick it up on next run." (My Tasks reference reflects downstream auto-registration, not a direct write by this provisioner.) Closes the gap surfaced by the 2026-04-28 Routine migration to Smartsheet enumeration — without this, every newly-provisioned project would be sentinel-skipped on its next Routine run.*
+*Changelog v1.13: Collaborators + Collaborator Names support — parse Hub Team table at provisioning time, write Slack user IDs to Collaborators (col `3407511236677508`) and human-readable names to Collaborator Names (col `6583842740932484`). Regex guard added: only IDs matching `^U[A-Z0-9]{8,}$` are accepted — placeholders skipped. Active Session Guard spec added — session Claude updates both fields in Smartsheet when new team members are assigned, enabling CT self-awareness on next session open with no manual touchpoints.*
